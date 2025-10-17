@@ -1,0 +1,59 @@
+import { Board } from "@/utils/sudoku";
+import SudokuCell from "./SudokuCell";
+import { cn } from "@/lib/utils";
+
+interface SudokuGridProps {
+  board: Board;
+  initialBoard: Board;
+  solution: Board;
+  selectedCell: { row: number; col: number } | null;
+  onCellClick: (row: number, col: number) => void;
+  errors: Set<string>;
+}
+
+const SudokuGrid = ({
+  board,
+  initialBoard,
+  solution,
+  selectedCell,
+  onCellClick,
+  errors,
+}: SudokuGridProps) => {
+  return (
+    <div className="inline-block bg-card rounded-lg shadow-xl p-2 md:p-4 animate-scale-in">
+      <div className="grid grid-cols-9 gap-0">
+        {board.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const isFixed = initialBoard[rowIndex][colIndex] !== null;
+            const isSelected =
+              selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
+            const cellKey = `${rowIndex}-${colIndex}`;
+            const isError = errors.has(cellKey);
+            const isRightBorder = (colIndex + 1) % 3 === 0 && colIndex !== 8;
+            const isBottomBorder = (rowIndex + 1) % 3 === 0 && rowIndex !== 8;
+
+            return (
+              <div
+                key={cellKey}
+                className={cn(
+                  isRightBorder && "border-r-2 border-gridLineThick",
+                  isBottomBorder && "border-b-2 border-gridLineThick"
+                )}
+              >
+                <SudokuCell
+                  value={cell}
+                  isFixed={isFixed}
+                  isSelected={isSelected}
+                  isError={isError}
+                  onClick={() => onCellClick(rowIndex, colIndex)}
+                />
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SudokuGrid;
