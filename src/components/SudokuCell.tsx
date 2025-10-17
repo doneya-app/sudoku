@@ -4,11 +4,12 @@ interface SudokuCellProps {
   value: number | null;
   isFixed: boolean;
   isSelected: boolean;
+  isHighlighted: boolean;
   isError: boolean;
   onClick: () => void;
 }
 
-const SudokuCell = ({ value, isFixed, isSelected, isError, onClick }: SudokuCellProps) => {
+const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isError, onClick }: SudokuCellProps) => {
   return (
     <button
       onClick={onClick}
@@ -18,6 +19,7 @@ const SudokuCell = ({ value, isFixed, isSelected, isError, onClick }: SudokuCell
         "border border-gridLine focus:outline-none focus:ring-2 focus:ring-primary focus:z-10",
         isFixed && "bg-cellFixed text-muted-foreground cursor-not-allowed",
         !isFixed && "bg-card hover:bg-secondary cursor-pointer active:scale-95",
+        isHighlighted && !isSelected && "bg-cellHighlighted",
         isSelected && "bg-cellSelected ring-2 ring-primary",
         isError && "bg-cellError text-destructive",
         !value && "text-transparent"

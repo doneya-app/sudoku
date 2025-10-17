@@ -40,7 +40,8 @@ All colors MUST be HSL.
     
     --grid-line: 220 20% 80%;
     --grid-line-thick: 230 25% 60%;
-    --cell-selected: 237 62% 95%;
+    --cell-selected: 237 62% 90%;
+    --cell-highlighted: 237 40% 97%;
     --cell-error: 0 72% 95%;
     --cell-fixed: 220 15% 88%;
     
@@ -94,7 +95,8 @@ All colors MUST be HSL.
     
     --grid-line: 230 20% 25%;
     --grid-line-thick: 230 20% 40%;
-    --cell-selected: 237 62% 18%;
+    --cell-selected: 237 62% 25%;
+    --cell-highlighted: 237 30% 15%;
     --cell-error: 0 72% 18%;
     --cell-fixed: 230 20% 16%;
     --sidebar-background: 240 5.9% 10%;

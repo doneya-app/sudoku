@@ -50,6 +50,7 @@ export default {
         gridLine: "hsl(var(--grid-line))",
         gridLineThick: "hsl(var(--grid-line-thick))",
         cellSelected: "hsl(var(--cell-selected))",
+        cellHighlighted: "hsl(var(--cell-highlighted))",
         cellError: "hsl(var(--cell-error))",
         cellFixed: "hsl(var(--cell-fixed))",
         sidebar: {

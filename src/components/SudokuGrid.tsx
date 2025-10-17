@@ -27,6 +27,10 @@ const SudokuGrid = ({
             const isFixed = initialBoard[rowIndex][colIndex] !== null;
             const isSelected =
               selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
+            const isHighlighted =
+              selectedCell !== null &&
+              (selectedCell.row === rowIndex || selectedCell.col === colIndex) &&
+              !isSelected;
             const cellKey = `${rowIndex}-${colIndex}`;
             const isError = errors.has(cellKey);
             const isRightBorder = (colIndex + 1) % 3 === 0 && colIndex !== 8;
@@ -44,6 +48,7 @@ const SudokuGrid = ({
                   value={cell}
                   isFixed={isFixed}
                   isSelected={isSelected}
+                  isHighlighted={isHighlighted}
                   isError={isError}
                   onClick={() => onCellClick(rowIndex, colIndex)}
                 />
