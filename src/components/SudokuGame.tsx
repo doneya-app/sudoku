@@ -77,18 +77,20 @@ const SudokuGame = () => {
     }
 
     // Check if the number would be valid before inserting
-    const testBoard = board.map((r) => [...r]);
-    testBoard[row][col] = num;
+    // We need to check the current board state (not including the cell we're about to change)
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = null; // Temporarily clear the cell
     
-    if (!isValid(testBoard, row, col, num)) {
+    if (!isValid(newBoard, row, col, num)) {
       toast.error("Invalid move! Number already exists in row, column, or 3×3 box");
       return;
     }
 
     // Number is valid, insert it
-    setBoard(testBoard);
+    newBoard[row][col] = num;
+    setBoard(newBoard);
 
-    if (isBoardComplete(testBoard, solution)) {
+    if (isBoardComplete(newBoard, solution)) {
       setIsComplete(true);
       toast.success("🎉 Congratulations! You solved the puzzle!");
     }
