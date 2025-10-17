@@ -17,7 +17,7 @@ const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isError, onClic
       onDoubleClick={onDoubleClick}
       disabled={isFixed}
       className={cn(
-        "aspect-square w-full min-h-[48px] sm:min-h-[56px] md:min-h-[64px] flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-semibold transition-all touch-manipulation",
+        "aspect-square w-full min-h-[40px] sm:min-h-[44px] md:min-h-[48px] flex items-center justify-center text-xl sm:text-2xl md:text-3xl font-semibold transition-all touch-manipulation",
         "border border-gridLine focus:outline-none focus:ring-2 focus:ring-primary focus:z-10",
         isFixed && "bg-cellFixed text-muted-foreground cursor-not-allowed",
         !isFixed && "bg-card hover:bg-secondary cursor-pointer active:scale-95",
