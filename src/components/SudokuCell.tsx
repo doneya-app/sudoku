@@ -14,10 +14,10 @@ const SudokuCell = ({ value, isFixed, isSelected, isError, onClick }: SudokuCell
       onClick={onClick}
       disabled={isFixed}
       className={cn(
-        "aspect-square w-full flex items-center justify-center text-lg md:text-xl font-semibold transition-all",
+        "aspect-square w-full min-h-[48px] sm:min-h-[56px] md:min-h-[64px] flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-semibold transition-all touch-manipulation",
         "border border-gridLine focus:outline-none focus:ring-2 focus:ring-primary focus:z-10",
         isFixed && "bg-cellFixed text-muted-foreground cursor-not-allowed",
-        !isFixed && "bg-card hover:bg-secondary cursor-pointer",
+        !isFixed && "bg-card hover:bg-secondary cursor-pointer active:scale-95",
         isSelected && "bg-cellSelected ring-2 ring-primary",
         isError && "bg-cellError text-destructive",
         !value && "text-transparent"

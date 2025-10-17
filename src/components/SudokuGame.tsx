@@ -53,23 +53,27 @@ const SudokuGame = () => {
     const { row, col } = selectedCell;
     if (initialBoard[row][col] !== null) return;
 
-    const newBoard = board.map((r) => [...r]);
-    newBoard[row][col] = num;
-
-    const newErrors = new Set(errors);
-    const cellKey = `${row}-${col}`;
-
-    if (num !== null && !isValid(newBoard, row, col, num)) {
-      newErrors.add(cellKey);
-      toast.error("Invalid move!");
-    } else {
-      newErrors.delete(cellKey);
+    // If clearing the cell (num is null), allow it
+    if (num === null) {
+      const newBoard = board.map((r) => [...r]);
+      newBoard[row][col] = null;
+      setBoard(newBoard);
+      return;
     }
 
-    setBoard(newBoard);
-    setErrors(newErrors);
+    // Check if the number would be valid before inserting
+    const testBoard = board.map((r) => [...r]);
+    testBoard[row][col] = num;
+    
+    if (!isValid(testBoard, row, col, num)) {
+      toast.error("Invalid move! Number already exists in row, column, or 3×3 box");
+      return;
+    }
 
-    if (isBoardComplete(newBoard, solution)) {
+    // Number is valid, insert it
+    setBoard(testBoard);
+
+    if (isBoardComplete(testBoard, solution)) {
       setIsComplete(true);
       toast.success("🎉 Congratulations! You solved the puzzle!");
     }
@@ -89,8 +93,8 @@ const SudokuGame = () => {
   }, [selectedCell, board]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-2xl space-y-6 animate-fade-in">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-4xl space-y-4 sm:space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-2">
             <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-primary" />
