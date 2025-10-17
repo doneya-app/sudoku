@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
 import {
@@ -10,7 +17,7 @@ import {
   isValid,
   isBoardComplete,
 } from "@/utils/sudoku";
-import { Sparkles, RotateCcw } from "lucide-react";
+import { Sparkles, RotateCcw, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
@@ -23,6 +30,7 @@ const SudokuGame = () => {
   );
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [isComplete, setIsComplete] = useState(false);
+  const [highlightEnabled, setHighlightEnabled] = useState(true);
 
   const initializeGame = useCallback((diff: Difficulty) => {
     const { puzzle, solution: sol } = generatePuzzle(diff);
@@ -41,6 +49,13 @@ const SudokuGame = () => {
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard[row][col] === null) {
       setSelectedCell({ row, col });
+    }
+  };
+
+  const handleCellDoubleClick = (row: number, col: number) => {
+    if (selectedCell?.row === row && selectedCell?.col === col) {
+      setHighlightEnabled(!highlightEnabled);
+      toast.info(highlightEnabled ? "Row/column highlight disabled" : "Row/column highlight enabled");
     }
   };
 
@@ -114,14 +129,42 @@ const SudokuGame = () => {
             </TabsList>
           </Tabs>
 
-          <Button
-            onClick={() => initializeGame(difficulty)}
-            variant="outline"
-            className="gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            New Game
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => initializeGame(difficulty)}
+              variant="outline"
+              className="gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              New Game
+            </Button>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Settings</h3>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="highlight-toggle" className="cursor-pointer">
+                      Row/Column Highlight
+                    </Label>
+                    <Switch
+                      id="highlight-toggle"
+                      checked={highlightEnabled}
+                      onCheckedChange={setHighlightEnabled}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Double-click a selected cell to quickly toggle highlighting
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="flex justify-center">
@@ -131,7 +174,9 @@ const SudokuGame = () => {
             solution={solution}
             selectedCell={selectedCell}
             onCellClick={handleCellClick}
+            onCellDoubleClick={handleCellDoubleClick}
             errors={errors}
+            highlightEnabled={highlightEnabled}
           />
         </div>
 

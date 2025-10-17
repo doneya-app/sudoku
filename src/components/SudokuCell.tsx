@@ -7,12 +7,14 @@ interface SudokuCellProps {
   isHighlighted: boolean;
   isError: boolean;
   onClick: () => void;
+  onDoubleClick: () => void;
 }
 
-const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isError, onClick }: SudokuCellProps) => {
+const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isError, onClick, onDoubleClick }: SudokuCellProps) => {
   return (
     <button
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       disabled={isFixed}
       className={cn(
         "aspect-square w-full min-h-[48px] sm:min-h-[56px] md:min-h-[64px] flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-semibold transition-all touch-manipulation",

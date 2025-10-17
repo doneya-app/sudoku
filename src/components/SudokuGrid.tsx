@@ -8,7 +8,9 @@ interface SudokuGridProps {
   solution: Board;
   selectedCell: { row: number; col: number } | null;
   onCellClick: (row: number, col: number) => void;
+  onCellDoubleClick: (row: number, col: number) => void;
   errors: Set<string>;
+  highlightEnabled: boolean;
 }
 
 const SudokuGrid = ({
@@ -17,7 +19,9 @@ const SudokuGrid = ({
   solution,
   selectedCell,
   onCellClick,
+  onCellDoubleClick,
   errors,
+  highlightEnabled,
 }: SudokuGridProps) => {
   return (
     <div className="inline-block bg-card rounded-lg shadow-xl p-3 sm:p-4 md:p-6 animate-scale-in w-full max-w-2xl">
@@ -28,6 +32,7 @@ const SudokuGrid = ({
             const isSelected =
               selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
             const isHighlighted =
+              highlightEnabled &&
               selectedCell !== null &&
               (selectedCell.row === rowIndex || selectedCell.col === colIndex) &&
               !isSelected;
@@ -51,6 +56,7 @@ const SudokuGrid = ({
                   isHighlighted={isHighlighted}
                   isError={isError}
                   onClick={() => onCellClick(rowIndex, colIndex)}
+                  onDoubleClick={() => onCellDoubleClick(rowIndex, colIndex)}
                 />
               </div>
             );
