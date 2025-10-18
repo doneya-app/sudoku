@@ -48,6 +48,13 @@ function solveSudoku(board: Board): boolean {
   return true;
 }
 
+// Solve a given puzzle and return the solution
+export function solvePuzzle(puzzle: Board): Board {
+  const solution = puzzle.map(row => [...row]);
+  solveSudoku(solution);
+  return solution;
+}
+
 // Generate a solved board
 function generateSolvedBoard(): Board {
   const board: Board = Array(BOARD_SIZE)

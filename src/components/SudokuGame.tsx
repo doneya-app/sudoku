@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
 import ColorSchemeSelector from "./ColorSchemeSelector";
+import InstallPrompt from "./InstallPrompt";
 import {
   Board,
   Difficulty,
@@ -21,6 +22,7 @@ import {
   isValid,
   isBoardComplete,
   createEmptyBoard,
+  solvePuzzle,
 } from "@/utils/sudoku";
 import {
   encodeInitialPuzzle,
@@ -91,8 +93,8 @@ const SudokuGame = () => {
         return;
       }
 
-      // Generate solution for the puzzle
-      const { solution: sol } = generatePuzzle(diff);
+      // Solve the puzzle from URL
+      const sol = solvePuzzle(puzzle);
       
       setDifficulty(diff);
       setInitialBoard(puzzle.map((row) => [...row]));
@@ -207,6 +209,7 @@ const SudokuGame = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+      <InstallPrompt />
       <div className="w-full max-w-4xl space-y-4 sm:space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-2">
