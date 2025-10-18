@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,11 +17,24 @@ import {
   generatePuzzle,
   isValid,
   isBoardComplete,
+  createEmptyBoard,
 } from "@/utils/sudoku";
-import { Sparkles, RotateCcw, Settings } from "lucide-react";
+import {
+  encodeInitialPuzzle,
+  decodeInitialPuzzle,
+  encodeCurrentState,
+  decodeCurrentState,
+  difficultyToChar,
+  charToDifficulty,
+} from "@/utils/urlState";
+import { Sparkles, RotateCcw, Settings, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
+  const { gameState } = useParams<{ gameState?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [board, setBoard] = useState<Board>([]);
   const [initialBoard, setInitialBoard] = useState<Board>([]);
@@ -31,6 +45,7 @@ const SudokuGame = () => {
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [isComplete, setIsComplete] = useState(false);
   const [highlightEnabled, setHighlightEnabled] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const initializeGame = useCallback((diff: Difficulty) => {
     const { puzzle, solution: sol } = generatePuzzle(diff);
@@ -40,11 +55,74 @@ const SudokuGame = () => {
     setSelectedCell(null);
     setErrors(new Set());
     setIsComplete(false);
+
+    // Update URL with new game state
+    const encoded = encodeInitialPuzzle(puzzle);
+    const diffChar = difficultyToChar(diff);
+    navigate(`/${diffChar}${encoded}`, { replace: true });
+  }, [navigate]);
+
+  // Load game from URL on mount
+  useEffect(() => {
+    if (isInitialized) return;
+
+    if (gameState && gameState.length > 0) {
+      const diffChar = gameState[0];
+      const puzzleEncoded = gameState.slice(1);
+      const stateParam = searchParams.get("s");
+
+      const diff = charToDifficulty(diffChar);
+      if (!diff) {
+        toast.error("Invalid difficulty in URL");
+        initializeGame("medium");
+        setIsInitialized(true);
+        return;
+      }
+
+      const puzzle = decodeInitialPuzzle(puzzleEncoded);
+      if (!puzzle) {
+        toast.error("Invalid puzzle data in URL");
+        initializeGame(diff);
+        setIsInitialized(true);
+        return;
+      }
+
+      // Generate solution for the puzzle
+      const { solution: sol } = generatePuzzle(diff);
+      
+      setDifficulty(diff);
+      setInitialBoard(puzzle.map((row) => [...row]));
+      setSolution(sol);
+
+      // Apply current state if provided
+      if (stateParam) {
+        const moves = decodeCurrentState(stateParam);
+        const currentBoard = puzzle.map((row) => [...row]);
+        moves.forEach(({ row, col, num }) => {
+          if (puzzle[row][col] === null) {
+            currentBoard[row][col] = num;
+          }
+        });
+        setBoard(currentBoard);
+      } else {
+        setBoard(puzzle.map((row) => [...row]));
+      }
+
+      setSelectedCell(null);
+      setErrors(new Set());
+      setIsComplete(false);
+    } else {
+      initializeGame(difficulty);
+    }
+
+    setIsInitialized(true);
   }, []);
 
+  // Update URL when difficulty changes (only if already initialized)
   useEffect(() => {
+    if (!isInitialized) return;
     initializeGame(difficulty);
-  }, [difficulty, initializeGame]);
+  }, [difficulty]);
 
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard[row][col] === null) {
@@ -77,7 +155,6 @@ const SudokuGame = () => {
     }
 
     // Check if the number would be valid before inserting
-    // We need to check the current board state (not including the cell we're about to change)
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null; // Temporarily clear the cell
     
@@ -94,6 +171,21 @@ const SudokuGame = () => {
       setIsComplete(true);
       toast.success("🎉 Congratulations! You solved the puzzle!");
     }
+  };
+
+  const handleShare = () => {
+    const currentState = encodeCurrentState(initialBoard, board);
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = currentState ? `${baseUrl}?s=${currentState}` : baseUrl;
+
+    navigator.clipboard.writeText(shareUrl).then(
+      () => {
+        toast.success("Game URL copied to clipboard!");
+      },
+      () => {
+        toast.error("Failed to copy URL");
+      }
+    );
   };
 
   useEffect(() => {
@@ -139,6 +231,15 @@ const SudokuGame = () => {
             >
               <RotateCcw className="w-4 h-4" />
               New Game
+            </Button>
+
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              className="gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
             </Button>
 
             <Popover>
