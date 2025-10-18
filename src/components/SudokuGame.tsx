@@ -3,6 +3,11 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -20,13 +25,13 @@ import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
 import ColorSchemeSelector from "./ColorSchemeSelector";
 import InstallPrompt from "./InstallPrompt";
-import UpdatePrompt from "./UpdatePrompt";
 import {
   Board,
   Difficulty,
   generatePuzzle,
   isValid,
   isBoardComplete,
+  createEmptyBoard,
   solvePuzzle,
 } from "@/utils/sudoku";
 import {
@@ -37,7 +42,7 @@ import {
   difficultyToChar,
   charToDifficulty,
 } from "@/utils/urlState";
-import { Sparkles, RotateCcw, Share2, Moon, Sun } from "lucide-react";
+import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
@@ -243,158 +248,138 @@ const SudokuGame = () => {
   }, [selectedCell, board]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <AlertDialog open={showLoadDialog} onOpenChange={(open) => !open && setShowLoadDialog(false)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Load existing game?</AlertDialogTitle>
-            <AlertDialogDescription>
-              We found saved progress in this URL. Do you want to load it onto this puzzle?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={dismissPendingMoves}>No</AlertDialogCancel>
-            <AlertDialogAction onClick={applyPendingMoves}>Yes, load progress</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
-              <Sparkles className="w-8 h-8 text-primary" />
-              Sudoku
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Fill the grid so each row, column, and 3×3 box contains 1-9</p>
-          </div>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+      <InstallPrompt />
+      <div className="w-full max-w-4xl space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-2">
+            <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-primary" />
+            Sudoku
+          </h1>
+          <p className="text-muted-foreground">
+            Fill the grid so each row, column, and 3×3 box contains 1-9
+          </p>
         </div>
-      </div>
 
-      {/* Three Column Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-6 items-start">
-          
-          {/* Left Column - Number Pad */}
-          <div className="order-3 lg:order-1">
-            <div className="bg-card rounded-lg border border-border p-6 sticky top-24">
-              <h3 className="text-lg font-semibold mb-4 text-center">Numbers</h3>
-              <NumberPad onNumberClick={handleNumberInput} />
-            </div>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Tabs value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)}>
+            <TabsList>
+              <TabsTrigger value="easy">Easy</TabsTrigger>
+              <TabsTrigger value="medium">Medium</TabsTrigger>
+              <TabsTrigger value="hard">Hard</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-          {/* Center Column - Game Board */}
-          <div className="order-1 lg:order-2 flex justify-center">
-            <div className="w-full">
-              <SudokuGrid
-                board={board}
-                initialBoard={initialBoard}
-                solution={solution}
-                selectedCell={selectedCell}
-                onCellClick={handleCellClick}
-                onCellDoubleClick={handleCellDoubleClick}
-                errors={errors}
-                highlightEnabled={highlightEnabled}
-              />
-              {isComplete && (
-                <div className="text-center mt-6 animate-scale-in">
-                  <p className="text-2xl font-bold text-primary">
-                    Perfect! 🎉
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => initializeGame(difficulty)}
+              variant="outline"
+              className="gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              New Game
+            </Button>
 
-          {/* Right Column - Settings & Controls */}
-          <div className="order-2 lg:order-3">
-            <div className="bg-card rounded-lg border border-border p-6 space-y-6 sticky top-24">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Game Setup</h3>
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              className="gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </Button>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96">
                 <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Difficulty</Label>
-                    <Tabs value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)} className="w-full">
-                      <TabsList className="grid grid-cols-3 w-full">
-                        <TabsTrigger value="easy">Easy</TabsTrigger>
-                        <TabsTrigger value="medium">Medium</TabsTrigger>
-                        <TabsTrigger value="hard">Hard</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-
-                  <Button
-                    onClick={() => initializeGame(difficulty)}
-                    variant="default"
-                    size="lg"
-                    className="w-full font-semibold"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    New Game
-                  </Button>
-
-                  <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    size="lg"
-                    className="w-full font-semibold"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share Game
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Appearance</h3>
-                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Settings</h3>
+                  
                   <ColorSchemeSelector />
                   
-                  <div className="flex items-center justify-between pt-2">
-                    <Label htmlFor="dark-mode-toggle" className="cursor-pointer flex items-center gap-2">
-                      {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                      Dark Mode
-                    </Label>
-                    <Switch
-                      id="dark-mode-toggle"
-                      checked={theme === "dark"}
-                      onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                    />
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Appearance</h4>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="dark-mode-toggle" className="cursor-pointer flex items-center gap-2">
+                        {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                        Dark Mode
+                      </Label>
+                      <Switch
+                        id="dark-mode-toggle"
+                        checked={theme === "dark"}
+                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                      />
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Gameplay</h4>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="highlight-toggle" className="cursor-pointer">
+                        Row/Column Highlight
+                      </Label>
+                      <Switch
+                        id="highlight-toggle"
+                        checked={highlightEnabled}
+                        onCheckedChange={setHighlightEnabled}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Double-click a selected cell to quickly toggle highlighting
+                    </p>
                   </div>
                 </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Gameplay</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="highlight-toggle" className="cursor-pointer">
-                      Row/Column Highlight
-                    </Label>
-                    <Switch
-                      id="highlight-toggle"
-                      checked={highlightEnabled}
-                      onCheckedChange={setHighlightEnabled}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Double-click a selected cell to quickly toggle highlighting
-                  </p>
-                </div>
-              </div>
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
-
         </div>
-      </div>
 
-      <InstallPrompt />
-      <UpdatePrompt />
+        <div className="flex justify-center">
+          <SudokuGrid
+            board={board}
+            initialBoard={initialBoard}
+            solution={solution}
+            selectedCell={selectedCell}
+            onCellClick={handleCellClick}
+            onCellDoubleClick={handleCellDoubleClick}
+            errors={errors}
+            highlightEnabled={highlightEnabled}
+          />
+        </div>
+
+        <NumberPad onNumberClick={handleNumberInput} />
+
+        {isComplete && (
+          <div className="text-center animate-scale-in">
+            <p className="text-2xl font-bold text-primary">
+              Perfect! 🎉
+            </p>
+          </div>
+        )}
+
+        <AlertDialog open={showLoadDialog} onOpenChange={(open) => !open && setShowLoadDialog(false)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Load existing game?</AlertDialogTitle>
+              <AlertDialogDescription>
+                We found saved progress in this URL. Do you want to load it onto this puzzle?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={dismissPendingMoves}>No</AlertDialogCancel>
+              <AlertDialogAction onClick={applyPendingMoves}>Yes, load progress</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 };
