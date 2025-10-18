@@ -11,6 +11,16 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
 import ColorSchemeSelector from "./ColorSchemeSelector";
@@ -52,6 +62,8 @@ const SudokuGame = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [highlightEnabled, setHighlightEnabled] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [pendingMoves, setPendingMoves] = useState<Array<{ row: number; col: number; num: number }> | null>(null);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
 
   const initializeGame = useCallback((diff: Difficulty) => {
     const { puzzle, solution: sol } = generatePuzzle(diff);
@@ -112,18 +124,16 @@ const SudokuGame = () => {
       setInitialBoard(puzzle.map((row) => [...row]));
       setSolution(sol);
 
-      // Apply current state if provided
+      // Always start from the base puzzle; ask before applying shared progress
+      setBoard(puzzle.map((row) => [...row]));
+
+      // If a shared state is present, store it and prompt the user
       if (stateParam) {
         const moves = decodeCurrentState(stateParam);
-        const currentBoard = puzzle.map((row) => [...row]);
-        moves.forEach(({ row, col, num }) => {
-          if (puzzle[row][col] === null) {
-            currentBoard[row][col] = num;
-          }
-        });
-        setBoard(currentBoard);
-      } else {
-        setBoard(puzzle.map((row) => [...row]));
+        if (moves.length > 0) {
+          setPendingMoves(moves);
+          setShowLoadDialog(true);
+        }
       }
 
       setSelectedCell(null);
@@ -205,6 +215,24 @@ const SudokuGame = () => {
       }
     );
   };
+
+  const applyPendingMoves = useCallback(() => {
+    if (!pendingMoves || initialBoard.length === 0) return;
+    const currentBoard = initialBoard.map((row) => [...row]);
+    pendingMoves.forEach(({ row, col, num }) => {
+      if (initialBoard[row][col] === null) {
+        currentBoard[row][col] = num;
+      }
+    });
+    setBoard(currentBoard);
+    setShowLoadDialog(false);
+    setPendingMoves(null);
+  }, [pendingMoves, initialBoard]);
+
+  const dismissPendingMoves = useCallback(() => {
+    setShowLoadDialog(false);
+    setPendingMoves(null);
+  }, []);
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -336,6 +364,21 @@ const SudokuGame = () => {
             </p>
           </div>
         )}
+
+        <AlertDialog open={showLoadDialog} onOpenChange={(open) => !open && setShowLoadDialog(false)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Load existing game?</AlertDialogTitle>
+              <AlertDialogDescription>
+                We found saved progress in this URL. Do you want to load it onto this puzzle?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={dismissPendingMoves}>No</AlertDialogCancel>
+              <AlertDialogAction onClick={applyPendingMoves}>Yes, load progress</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
