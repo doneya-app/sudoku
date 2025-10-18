@@ -342,20 +342,41 @@ const SudokuGame = () => {
           </div>
         </div>
 
-        <div className="flex justify-center">
-          <SudokuGrid
-            board={board}
-            initialBoard={initialBoard}
-            solution={solution}
-            selectedCell={selectedCell}
-            onCellClick={handleCellClick}
-            onCellDoubleClick={handleCellDoubleClick}
-            errors={errors}
-            highlightEnabled={highlightEnabled}
-          />
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+          {/* Number pad on left for small screens, below for larger screens */}
+          <div className="sm:hidden">
+            <div className="flex gap-4 items-center justify-center">
+              <NumberPad onNumberClick={handleNumberInput} vertical={true} />
+              <div className="scale-[0.85]">
+                <SudokuGrid
+                  board={board}
+                  initialBoard={initialBoard}
+                  solution={solution}
+                  selectedCell={selectedCell}
+                  onCellClick={handleCellClick}
+                  onCellDoubleClick={handleCellDoubleClick}
+                  errors={errors}
+                  highlightEnabled={highlightEnabled}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Standard layout for larger screens */}
+          <div className="hidden sm:flex sm:flex-col sm:gap-6 sm:items-center">
+            <SudokuGrid
+              board={board}
+              initialBoard={initialBoard}
+              solution={solution}
+              selectedCell={selectedCell}
+              onCellClick={handleCellClick}
+              onCellDoubleClick={handleCellDoubleClick}
+              errors={errors}
+              highlightEnabled={highlightEnabled}
+            />
+            <NumberPad onNumberClick={handleNumberInput} />
+          </div>
         </div>
-
-        <NumberPad onNumberClick={handleNumberInput} />
 
         {isComplete && (
           <div className="text-center animate-scale-in">
