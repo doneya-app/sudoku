@@ -7,6 +7,7 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  /* Classic Blue (Default) */
   :root {
     --background: 220 25% 97%;
     --foreground: 230 25% 15%;
@@ -48,19 +49,12 @@ All colors MUST be HSL.
     --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -107,6 +101,213 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Forest Green */
+  [data-color-scheme="forest"] {
+    --background: 140 20% 97%;
+    --foreground: 150 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 30% 15%;
+
+    --primary: 142 62% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 140 20% 88%;
+    --secondary-foreground: 150 30% 15%;
+
+    --muted: 140 20% 88%;
+    --muted-foreground: 145 20% 45%;
+
+    --accent: 145 60% 85%;
+    --accent-foreground: 142 62% 35%;
+
+    --border: 140 20% 82%;
+    --input: 140 20% 82%;
+    --ring: 142 62% 45%;
+    
+    --grid-line: 140 20% 78%;
+    --grid-line-thick: 145 30% 55%;
+    --cell-selected: 142 50% 88%;
+    --cell-highlighted: 145 35% 96%;
+    --cell-error: 0 72% 95%;
+    --cell-fixed: 140 20% 85%;
+  }
+
+  [data-color-scheme="forest"].dark {
+    --background: 150 25% 10%;
+    --foreground: 140 15% 95%;
+
+    --card: 150 20% 13%;
+    --card-foreground: 140 15% 95%;
+
+    --popover: 150 20% 13%;
+    --popover-foreground: 140 15% 95%;
+
+    --primary: 142 60% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 20% 18%;
+    --secondary-foreground: 140 15% 95%;
+
+    --muted: 150 20% 18%;
+    --muted-foreground: 140 15% 65%;
+
+    --accent: 142 50% 20%;
+    --accent-foreground: 142 60% 85%;
+
+    --border: 150 20% 22%;
+    --input: 150 20% 22%;
+    --ring: 142 60% 50%;
+    
+    --grid-line: 150 20% 25%;
+    --grid-line-thick: 145 25% 40%;
+    --cell-selected: 142 50% 25%;
+    --cell-highlighted: 145 30% 15%;
+    --cell-error: 0 72% 18%;
+    --cell-fixed: 150 20% 16%;
+  }
+
+  /* Sunset Orange */
+  [data-color-scheme="sunset"] {
+    --background: 30 30% 97%;
+    --foreground: 20 35% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 35% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 35% 15%;
+
+    --primary: 25 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 25% 88%;
+    --secondary-foreground: 20 35% 15%;
+
+    --muted: 30 25% 88%;
+    --muted-foreground: 25 25% 45%;
+
+    --accent: 20 80% 85%;
+    --accent-foreground: 25 85% 40%;
+
+    --border: 30 25% 82%;
+    --input: 30 25% 82%;
+    --ring: 25 85% 55%;
+    
+    --grid-line: 30 25% 78%;
+    --grid-line-thick: 25 40% 55%;
+    --cell-selected: 25 75% 88%;
+    --cell-highlighted: 20 40% 96%;
+    --cell-error: 0 72% 95%;
+    --cell-fixed: 30 25% 85%;
+  }
+
+  [data-color-scheme="sunset"].dark {
+    --background: 20 30% 10%;
+    --foreground: 30 20% 95%;
+
+    --card: 20 25% 13%;
+    --card-foreground: 30 20% 95%;
+
+    --popover: 20 25% 13%;
+    --popover-foreground: 30 20% 95%;
+
+    --primary: 25 80% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 25% 18%;
+    --secondary-foreground: 30 20% 95%;
+
+    --muted: 20 25% 18%;
+    --muted-foreground: 30 20% 65%;
+
+    --accent: 25 70% 22%;
+    --accent-foreground: 25 80% 85%;
+
+    --border: 20 25% 22%;
+    --input: 20 25% 22%;
+    --ring: 25 80% 58%;
+    
+    --grid-line: 20 25% 25%;
+    --grid-line-thick: 25 30% 40%;
+    --cell-selected: 25 65% 25%;
+    --cell-highlighted: 20 35% 15%;
+    --cell-error: 0 72% 18%;
+    --cell-fixed: 20 25% 16%;
+  }
+
+  /* Purple Dream */
+  [data-color-scheme="purple"] {
+    --background: 280 25% 97%;
+    --foreground: 270 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 270 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 270 30% 15%;
+
+    --primary: 270 60% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 280 20% 88%;
+    --secondary-foreground: 270 30% 15%;
+
+    --muted: 280 20% 88%;
+    --muted-foreground: 275 20% 45%;
+
+    --accent: 275 70% 85%;
+    --accent-foreground: 270 60% 40%;
+
+    --border: 280 20% 82%;
+    --input: 280 20% 82%;
+    --ring: 270 60% 55%;
+    
+    --grid-line: 280 20% 78%;
+    --grid-line-thick: 275 35% 55%;
+    --cell-selected: 270 55% 88%;
+    --cell-highlighted: 275 40% 96%;
+    --cell-error: 0 72% 95%;
+    --cell-fixed: 280 20% 85%;
+  }
+
+  [data-color-scheme="purple"].dark {
+    --background: 270 30% 10%;
+    --foreground: 280 20% 95%;
+
+    --card: 270 25% 13%;
+    --card-foreground: 280 20% 95%;
+
+    --popover: 270 25% 13%;
+    --popover-foreground: 280 20% 95%;
+
+    --primary: 270 58% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 25% 18%;
+    --secondary-foreground: 280 20% 95%;
+
+    --muted: 270 25% 18%;
+    --muted-foreground: 280 20% 65%;
+
+    --accent: 270 55% 22%;
+    --accent-foreground: 270 60% 85%;
+
+    --border: 270 25% 22%;
+    --input: 270 25% 22%;
+    --ring: 270 58% 58%;
+    
+    --grid-line: 270 25% 25%;
+    --grid-line-thick: 275 30% 40%;
+    --cell-selected: 270 50% 25%;
+    --cell-highlighted: 275 35% 15%;
+    --cell-error: 0 72% 18%;
+    --cell-fixed: 270 25% 16%;
   }
 }
 

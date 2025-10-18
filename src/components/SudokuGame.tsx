@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -9,8 +10,10 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
+import ColorSchemeSelector from "./ColorSchemeSelector";
 import {
   Board,
   Difficulty,
@@ -27,13 +30,14 @@ import {
   difficultyToChar,
   charToDifficulty,
 } from "@/utils/urlState";
-import { Sparkles, RotateCcw, Settings, Share2 } from "lucide-react";
+import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
   const { gameState } = useParams<{ gameState?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [board, setBoard] = useState<Board>([]);
@@ -248,22 +252,47 @@ const SudokuGame = () => {
                   <Settings className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80">
+              <PopoverContent className="w-96">
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Settings</h3>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="highlight-toggle" className="cursor-pointer">
-                      Row/Column Highlight
-                    </Label>
-                    <Switch
-                      id="highlight-toggle"
-                      checked={highlightEnabled}
-                      onCheckedChange={setHighlightEnabled}
-                    />
+                  
+                  <ColorSchemeSelector />
+                  
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Appearance</h4>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="dark-mode-toggle" className="cursor-pointer flex items-center gap-2">
+                        {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                        Dark Mode
+                      </Label>
+                      <Switch
+                        id="dark-mode-toggle"
+                        checked={theme === "dark"}
+                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                      />
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Double-click a selected cell to quickly toggle highlighting
-                  </p>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Gameplay</h4>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="highlight-toggle" className="cursor-pointer">
+                        Row/Column Highlight
+                      </Label>
+                      <Switch
+                        id="highlight-toggle"
+                        checked={highlightEnabled}
+                        onCheckedChange={setHighlightEnabled}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Double-click a selected cell to quickly toggle highlighting
+                    </p>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
