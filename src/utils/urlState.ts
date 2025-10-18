@@ -1,12 +1,5 @@
 import { Board, Difficulty } from "./sudoku";
 
-// 62 truly URL-safe characters (unreserved per RFC 3986)
-// For positions 62-80, we'll use two-character encoding
-const POSITION_CHARS = 
-  "abcdefghijklmnopqrstuvwxyz" + // 0-25
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + // 26-51
-  "0123456789";                   // 52-61
-
 // Difficulty mapping
 const DIFFICULTY_MAP: Record<Difficulty, string> = {
   easy: "e",
@@ -20,90 +13,42 @@ const CHAR_TO_DIFFICULTY: Record<string, Difficulty> = {
   h: "hard",
 };
 
-// Convert position (0-80) to character(s)
-function positionToChar(pos: number): string {
-  if (pos < 0 || pos > 80) throw new Error("Invalid position");
-  if (pos < 62) {
-    return POSITION_CHARS[pos];
-  }
-  // For positions 62-80, use two characters: underscore + offset
-  const offset = pos - 62;
-  return "_" + POSITION_CHARS[offset];
-}
-
-// Convert character(s) to position (0-80)
-function charToPosition(char: string, nextChar?: string): { pos: number; charsUsed: number } {
-  if (char === "_" && nextChar) {
-    // Two-character encoding for positions 62-80
-    const offset = POSITION_CHARS.indexOf(nextChar);
-    if (offset === -1) throw new Error("Invalid position character");
-    return { pos: 62 + offset, charsUsed: 2 };
-  }
-  
-  const pos = POSITION_CHARS.indexOf(char);
-  if (pos === -1) throw new Error("Invalid position character");
-  return { pos, charsUsed: 1 };
-}
-
-// Convert row, col to position (0-80)
-function rowColToPosition(row: number, col: number): number {
-  return row * 9 + col;
-}
-
-// Convert position (0-80) to row, col
-function positionToRowCol(pos: number): { row: number; col: number } {
-  return {
-    row: Math.floor(pos / 9),
-    col: pos % 9,
-  };
-}
-
-// Encode initial puzzle board (only filled cells)
+// Encode initial puzzle board (81 characters: 0 = empty, 1-9 = filled)
 export function encodeInitialPuzzle(board: Board): string {
   let encoded = "";
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       const value = board[row][col];
-      if (value !== null) {
-        const pos = rowColToPosition(row, col);
-        encoded += positionToChar(pos) + value.toString();
-      }
+      encoded += value === null ? "0" : value.toString();
     }
   }
   return encoded;
 }
 
-// Decode initial puzzle from encoded string
+// Decode initial puzzle from encoded string (81 characters)
 export function decodeInitialPuzzle(encoded: string): Board | null {
   try {
+    if (encoded.length !== 81) {
+      console.error("Invalid puzzle length:", encoded.length);
+      return null;
+    }
+
     const board: Board = Array(9)
       .fill(null)
       .map(() => Array(9).fill(null));
 
-    // Parse position and number pairs
-    let i = 0;
-    while (i < encoded.length) {
-      const posChar = encoded[i];
-      const nextChar = encoded[i + 1];
+    for (let i = 0; i < 81; i++) {
+      const char = encoded[i];
+      const num = parseInt(char);
       
-      if (!posChar) break;
-
-      const { pos, charsUsed } = charToPosition(posChar, nextChar);
-      i += charsUsed;
-
-      const numChar = encoded[i];
-      if (!numChar) {
-        throw new Error("Invalid encoding format");
+      if (isNaN(num) || num < 0 || num > 9) {
+        console.error("Invalid character at position", i, ":", char);
+        return null;
       }
 
-      const num = parseInt(numChar);
-      if (isNaN(num) || num < 1 || num > 9) {
-        throw new Error("Invalid number");
-      }
-
-      const { row, col } = positionToRowCol(pos);
-      board[row][col] = num;
-      i++;
+      const row = Math.floor(i / 9);
+      const col = i % 9;
+      board[row][col] = num === 0 ? null : num;
     }
 
     return board;
@@ -113,7 +58,7 @@ export function decodeInitialPuzzle(encoded: string): Board | null {
   }
 }
 
-// Encode current state (only user-filled cells)
+// Encode current state (only user-filled cells, using position encoding)
 export function encodeCurrentState(initialBoard: Board, currentBoard: Board): string {
   let encoded = "";
   for (let row = 0; row < 9; row++) {
@@ -123,8 +68,9 @@ export function encodeCurrentState(initialBoard: Board, currentBoard: Board): st
 
       // Only encode cells that user filled (not in initial puzzle)
       if (currentValue !== null && initialValue === null) {
-        const pos = rowColToPosition(row, col);
-        encoded += positionToChar(pos) + currentValue.toString();
+        const position = row * 9 + col;
+        // Use base62 for position (0-80) + number (1-9)
+        encoded += base62Encode(position) + currentValue.toString();
       }
     }
   }
@@ -138,32 +84,60 @@ export function decodeCurrentState(encoded: string): Array<{ row: number; col: n
   try {
     let i = 0;
     while (i < encoded.length) {
-      const posChar = encoded[i];
-      const nextChar = encoded[i + 1];
-      
-      if (!posChar) break;
-
-      const { pos, charsUsed } = charToPosition(posChar, nextChar);
-      i += charsUsed;
-
-      const numChar = encoded[i];
-      if (!numChar) break;
-
-      const num = parseInt(numChar);
-      if (isNaN(num) || num < 1 || num > 9) {
+      // Read base62 position
+      let posStr = "";
+      while (i < encoded.length && isBase62Char(encoded[i])) {
+        posStr += encoded[i];
         i++;
+      }
+
+      if (!posStr || i >= encoded.length) break;
+
+      const position = base62Decode(posStr);
+      const num = parseInt(encoded[i]);
+      i++;
+
+      if (isNaN(num) || num < 1 || num > 9 || position < 0 || position > 80) {
         continue;
       }
 
-      const { row, col } = positionToRowCol(pos);
+      const row = Math.floor(position / 9);
+      const col = position % 9;
       moves.push({ row, col, num });
-      i++;
     }
   } catch (error) {
     console.error("Failed to decode current state:", error);
   }
 
   return moves;
+}
+
+// Base62 encoding helpers (a-z, A-Z, 0-9)
+const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+function base62Encode(num: number): string {
+  if (num === 0) return "0";
+  let result = "";
+  while (num > 0) {
+    result = BASE62_CHARS[num % 62] + result;
+    num = Math.floor(num / 62);
+  }
+  return result;
+}
+
+function base62Decode(str: string): number {
+  let result = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    const value = BASE62_CHARS.indexOf(char);
+    if (value === -1) return -1;
+    result = result * 62 + value;
+  }
+  return result;
+}
+
+function isBase62Char(char: string): boolean {
+  return BASE62_CHARS.includes(char);
 }
 
 // Convert difficulty to character

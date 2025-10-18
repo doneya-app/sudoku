@@ -36,7 +36,7 @@ import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
-  const { gameState } = useParams<{ gameState?: string }>();
+  const { gameState, "*": restPath } = useParams<{ gameState?: string; "*"?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -62,32 +62,44 @@ const SudokuGame = () => {
     setErrors(new Set());
     setIsComplete(false);
 
-    // Update URL with new game state
+    // Update URL with new game state (format: /difficulty/puzzle)
     const encoded = encodeInitialPuzzle(puzzle);
     const diffChar = difficultyToChar(diff);
-    navigate(`/${diffChar}${encoded}`, { replace: true });
+    navigate(`/${diffChar}/${encoded}`, { replace: true });
   }, [navigate]);
 
   // Load game from URL on mount
   useEffect(() => {
     if (isInitialized) return;
 
-    if (gameState && gameState.length > 0) {
-      const diffChar = gameState[0];
-      const puzzleEncoded = gameState.slice(1);
+    // Construct full game state from params
+    const fullGameState = restPath ? `${gameState}/${restPath}` : gameState;
+
+    if (fullGameState && fullGameState.length > 0) {
+      // Parse URL format: /difficulty/puzzle (81 characters)
+      const parts = fullGameState.split("/");
+      const diffChar = parts[0];
+      const puzzleEncoded = parts[1] || "";
       const stateParam = searchParams.get("s");
 
       const diff = charToDifficulty(diffChar);
       if (!diff) {
-        toast.error("Invalid difficulty in URL");
+        console.error("Invalid difficulty:", diffChar);
         initializeGame("medium");
+        setIsInitialized(true);
+        return;
+      }
+
+      if (!puzzleEncoded || puzzleEncoded.length !== 81) {
+        console.error("Invalid puzzle length:", puzzleEncoded.length);
+        initializeGame(diff);
         setIsInitialized(true);
         return;
       }
 
       const puzzle = decodeInitialPuzzle(puzzleEncoded);
       if (!puzzle) {
-        toast.error("Invalid puzzle data in URL");
+        console.error("Failed to decode puzzle");
         initializeGame(diff);
         setIsInitialized(true);
         return;
