@@ -281,13 +281,13 @@ const SudokuGame = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
       <InstallPrompt />
-      <div className="w-full max-w-4xl space-y-4 sm:space-y-6 animate-fade-in">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-2">
-            <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-primary" />
+      <div className="w-full max-w-4xl space-y-3 sm:space-y-6 animate-fade-in">
+        <div className="text-center space-y-1">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-2">
+            <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-primary" />
             Sudoku
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Fill the grid so each row, column, and 3×3 box contains 1-9
           </p>
         </div>
@@ -385,39 +385,27 @@ const SudokuGame = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-          {/* Number pad on left for small screens, below for larger screens */}
-          <div className="sm:hidden">
-            <div className="flex gap-4 items-center justify-center">
-              <NumberPad onNumberClick={handleNumberInput} vertical={true} />
-              <div className="scale-[0.85]">
-                <SudokuGrid
-                  board={board}
-                  initialBoard={initialBoard}
-                  solution={solution}
-                  selectedCell={selectedCell}
-                  onCellClick={handleCellClick}
-                  onCellDoubleClick={handleCellDoubleClick}
-                  errors={errors}
-                  highlightEnabled={highlightEnabled}
-                />
-              </div>
+        <div className="flex flex-col gap-3 sm:gap-6 items-center justify-center w-full">
+          {/* Sudoku Grid - full width on mobile, constrained on desktop */}
+          <SudokuGrid
+            board={board}
+            initialBoard={initialBoard}
+            solution={solution}
+            selectedCell={selectedCell}
+            onCellClick={handleCellClick}
+            onCellDoubleClick={handleCellDoubleClick}
+            errors={errors}
+            highlightEnabled={highlightEnabled}
+          />
+
+          {/* NumberPad - grid layout on mobile, flex wrap on desktop */}
+          <div className="w-full sm:w-auto">
+            <div className="sm:hidden">
+              <NumberPad onNumberClick={handleNumberInput} mobileGrid={true} />
             </div>
-          </div>
-          
-          {/* Standard layout for larger screens */}
-          <div className="hidden sm:flex sm:flex-col sm:gap-6 sm:items-center">
-            <SudokuGrid
-              board={board}
-              initialBoard={initialBoard}
-              solution={solution}
-              selectedCell={selectedCell}
-              onCellClick={handleCellClick}
-              onCellDoubleClick={handleCellDoubleClick}
-              errors={errors}
-              highlightEnabled={highlightEnabled}
-            />
-            <NumberPad onNumberClick={handleNumberInput} />
+            <div className="hidden sm:block">
+              <NumberPad onNumberClick={handleNumberInput} />
+            </div>
           </div>
         </div>
 
