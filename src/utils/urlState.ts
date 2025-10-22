@@ -91,11 +91,22 @@ export function decodeCurrentState(encoded: string): Array<{ row: number; col: n
         i++;
       }
 
-      if (!posStr || i >= encoded.length) break;
+      if (!posStr) break;
+
+      // If we've reached the end, the last character is the number, not part of position
+      let num: number;
+      if (i >= encoded.length) {
+        // Take last character of posStr as the number
+        num = parseInt(posStr[posStr.length - 1]);
+        posStr = posStr.slice(0, -1);
+        if (!posStr) break; // Invalid: no position
+      } else {
+        // Read the next character as the number
+        num = parseInt(encoded[i]);
+        i++;
+      }
 
       const position = base62Decode(posStr);
-      const num = parseInt(encoded[i]);
-      i++;
 
       if (isNaN(num) || num < 1 || num > 9 || position < 0 || position > 80) {
         continue;
