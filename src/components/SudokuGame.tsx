@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,10 @@ import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
-  const { gameState, "*": restPath } = useParams<{ gameState?: string; "*"?: string }>();
+  const { gameState, "*": restPath } = useParams<{
+    gameState?: string;
+    "*"?: string;
+  }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -55,30 +58,39 @@ const SudokuGame = () => {
   const [board, setBoard] = useState<Board>([]);
   const [initialBoard, setInitialBoard] = useState<Board>([]);
   const [solution, setSolution] = useState<Board>([]);
-  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(
-    null
-  );
+  const [selectedCell, setSelectedCell] = useState<{
+    row: number;
+    col: number;
+  } | null>(null);
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [isComplete, setIsComplete] = useState(false);
   const [highlightEnabled, setHighlightEnabled] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [pendingMoves, setPendingMoves] = useState<Array<{ row: number; col: number; num: number }> | null>(null);
+  const [pendingMoves, setPendingMoves] = useState<Array<{
+    row: number;
+    col: number;
+    num: number;
+  }> | null>(null);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const isInitialLoadRef = useRef(true);
 
-  const initializeGame = useCallback((diff: Difficulty) => {
-    const { puzzle, solution: sol } = generatePuzzle(diff);
-    setBoard(puzzle.map((row) => [...row]));
-    setInitialBoard(puzzle.map((row) => [...row]));
-    setSolution(sol);
-    setSelectedCell(null);
-    setErrors(new Set());
-    setIsComplete(false);
-
-    // Update URL with new game state (format: /difficulty/puzzle)
-    const encoded = encodeInitialPuzzle(puzzle);
-    const diffChar = difficultyToChar(diff);
-    navigate(`/${diffChar}/${encoded}`, { replace: true });
-  }, [navigate]);
+  const initializeGame = useCallback(
+    (diff: Difficulty) => {
+      console.log("Initializing new game with difficulty:", diff);
+      const { puzzle, solution: sol } = generatePuzzle(diff);
+      // Update URL with new game state (format: /difficulty/puzzle)
+      const encoded = encodeInitialPuzzle(puzzle);
+      const diffChar = difficultyToChar(diff);
+      navigate(`/${diffChar}/${encoded}`, { replace: true });
+      setBoard(puzzle.map((row) => [...row]));
+      setInitialBoard(puzzle.map((row) => [...row]));
+      setSolution(sol);
+      setSelectedCell(null);
+      setErrors(new Set());
+      setIsComplete(false);
+    },
+    [navigate],
+  );
 
   // Load game from URL on mount
   useEffect(() => {
@@ -87,6 +99,7 @@ const SudokuGame = () => {
     // Construct full game state from params
     const fullGameState = restPath ? `${gameState}/${restPath}` : gameState;
 
+    console.log("Loading game from URL state:", fullGameState);
     if (fullGameState && fullGameState.length > 0) {
       // Parse URL format: /difficulty/puzzle (81 characters)
       const parts = fullGameState.split("/");
@@ -119,7 +132,7 @@ const SudokuGame = () => {
 
       // Solve the puzzle from URL
       const sol = solvePuzzle(puzzle);
-      
+
       setDifficulty(diff);
       setInitialBoard(puzzle.map((row) => [...row]));
       setSolution(sol);
@@ -144,13 +157,25 @@ const SudokuGame = () => {
     }
 
     setIsInitialized(true);
+    // Don't set isInitialLoadRef.current = false here - it's set in a separate effect
   }, []);
 
   // Update URL when difficulty changes (only if already initialized)
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || isInitialLoadRef.current) return;
     initializeGame(difficulty);
   }, [difficulty]);
+
+  // Clear the initial load flag after the first render cycle completes
+  useEffect(() => {
+    if (isInitialized && isInitialLoadRef.current) {
+      // Use setTimeout to ensure this runs after all synchronous effects
+      const timer = setTimeout(() => {
+        isInitialLoadRef.current = false;
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized]);
 
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard[row][col] === null) {
@@ -161,7 +186,11 @@ const SudokuGame = () => {
   const handleCellDoubleClick = (row: number, col: number) => {
     if (selectedCell?.row === row && selectedCell?.col === col) {
       setHighlightEnabled(!highlightEnabled);
-      toast.info(highlightEnabled ? "Row/column highlight disabled" : "Row/column highlight enabled");
+      toast.info(
+        highlightEnabled
+          ? "Row/column highlight disabled"
+          : "Row/column highlight enabled",
+      );
     }
   };
 
@@ -185,9 +214,11 @@ const SudokuGame = () => {
     // Check if the number would be valid before inserting
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = null; // Temporarily clear the cell
-    
+
     if (!isValid(newBoard, row, col, num)) {
-      toast.error("Invalid move! Number already exists in row, column, or 3×3 box");
+      toast.error(
+        "Invalid move! Number already exists in row, column, or 3×3 box",
+      );
       return;
     }
 
@@ -212,7 +243,7 @@ const SudokuGame = () => {
       },
       () => {
         toast.error("Failed to copy URL");
-      }
+      },
     );
   };
 
@@ -262,7 +293,10 @@ const SudokuGame = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Tabs value={difficulty} onValueChange={(v) => setDifficulty(v as Difficulty)}>
+          <Tabs
+            value={difficulty}
+            onValueChange={(v) => setDifficulty(v as Difficulty)}
+          >
             <TabsList>
               <TabsTrigger value="easy">Easy</TabsTrigger>
               <TabsTrigger value="medium">Medium</TabsTrigger>
@@ -280,11 +314,7 @@ const SudokuGame = () => {
               New Game
             </Button>
 
-            <Button
-              onClick={handleShare}
-              variant="outline"
-              className="gap-2"
-            >
+            <Button onClick={handleShare} variant="outline" className="gap-2">
               <Share2 className="w-4 h-4" />
               Share
             </Button>
@@ -298,32 +328,44 @@ const SudokuGame = () => {
               <PopoverContent className="w-96">
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">Settings</h3>
-                  
+
                   <ColorSchemeSelector />
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Appearance</h4>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="dark-mode-toggle" className="cursor-pointer flex items-center gap-2">
-                        {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      <Label
+                        htmlFor="dark-mode-toggle"
+                        className="cursor-pointer flex items-center gap-2"
+                      >
+                        {theme === "dark" ? (
+                          <Moon className="w-4 h-4" />
+                        ) : (
+                          <Sun className="w-4 h-4" />
+                        )}
                         Dark Mode
                       </Label>
                       <Switch
                         id="dark-mode-toggle"
                         checked={theme === "dark"}
-                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                        onCheckedChange={(checked) =>
+                          setTheme(checked ? "dark" : "light")
+                        }
                       />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Gameplay</h4>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="highlight-toggle" className="cursor-pointer">
+                      <Label
+                        htmlFor="highlight-toggle"
+                        className="cursor-pointer"
+                      >
                         Row/Column Highlight
                       </Label>
                       <Switch
@@ -333,7 +375,8 @@ const SudokuGame = () => {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Double-click a selected cell to quickly toggle highlighting
+                      Double-click a selected cell to quickly toggle
+                      highlighting
                     </p>
                   </div>
                 </div>
@@ -380,23 +423,29 @@ const SudokuGame = () => {
 
         {isComplete && (
           <div className="text-center animate-scale-in">
-            <p className="text-2xl font-bold text-primary">
-              Perfect! 🎉
-            </p>
+            <p className="text-2xl font-bold text-primary">Perfect! 🎉</p>
           </div>
         )}
 
-        <AlertDialog open={showLoadDialog} onOpenChange={(open) => !open && setShowLoadDialog(false)}>
+        <AlertDialog
+          open={showLoadDialog}
+          onOpenChange={(open) => !open && setShowLoadDialog(false)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Load existing game?</AlertDialogTitle>
               <AlertDialogDescription>
-                We found saved progress in this URL. Do you want to load it onto this puzzle?
+                We found saved progress in this URL. Do you want to load it onto
+                this puzzle?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={dismissPendingMoves}>No</AlertDialogCancel>
-              <AlertDialogAction onClick={applyPendingMoves}>Yes, load progress</AlertDialogAction>
+              <AlertDialogCancel onClick={dismissPendingMoves}>
+                No
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={applyPendingMoves}>
+                Yes, load progress
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
