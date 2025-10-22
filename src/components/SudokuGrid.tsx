@@ -24,7 +24,7 @@ const SudokuGrid = ({
   highlightEnabled,
 }: SudokuGridProps) => {
   return (
-    <div className="inline-block bg-card rounded-lg shadow-xl p-2 sm:p-3 md:p-4 animate-scale-in w-full max-w-xl">
+    <div className="inline-block bg-card rounded-lg shadow-xl p-2 sm:p-3 md:p-4 animate-scale-in w-full sm:max-w-xl">
       <div className="grid grid-cols-9 gap-0">
         {board.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
