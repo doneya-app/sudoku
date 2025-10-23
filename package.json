@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run verify-build",
     "build:dev": "vite build --mode development",
+    "build:prod": "vite build",
+    "verify-build": "bash scripts/verify-build.sh",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
