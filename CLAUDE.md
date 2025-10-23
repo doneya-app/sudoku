@@ -52,9 +52,10 @@ The app follows a single-page application pattern with the following key archite
 **Provider Hierarchy** (from outer to inner in `main.tsx`):
 1. `ThemeProvider` (next-themes) - Manages light/dark mode
 2. `ColorSchemeProvider` - Manages custom color schemes for the Sudoku board
-3. `TooltipProvider` - shadcn-ui tooltip context
-4. `QueryClientProvider` - TanStack Query for data management
-5. `BrowserRouter` - React Router for URL-based routing
+3. `GameOptionsProvider` - Manages game UI visibility options (new game button, timer, errors, share button)
+4. `TooltipProvider` - shadcn-ui tooltip context
+5. `QueryClientProvider` - TanStack Query for data management
+6. `BrowserRouter` - React Router for URL-based routing
 
 **Routing**:
 - `/` - Main game page
@@ -89,9 +90,30 @@ The app follows a single-page application pattern with the following key archite
 
 **GameStats** (`src/components/GameStats.tsx`):
 - Displays game timer and error count
+- Supports conditional rendering via `showTimer` and `showErrors` props
+- Supports `compact` mode for inline display without background
+- Compact mode: smaller icons (3.5rem), no labels, no background/border
+- Regular mode: full-size display with background and optional labels
+- Returns null if both timer and errors are hidden
 - Updates every second during gameplay
 - Visual indicators: clock icon for time, alert icon for errors
 - Errors highlighted in red when count > 0
+
+**MobileMenu** (`src/components/MobileMenu.tsx`):
+- Hamburger menu for all screen sizes (unified navigation)
+- Positioned on the same row as difficulty tabs and game stats
+- DropdownMenu with four options: New Game, Reset Timer & Errors, Share, Settings
+- New Game always shown in menu for accessibility
+- Reset Timer & Errors button moved from Settings to menu (disabled when game complete)
+- Share conditionally shown based on `showShareButton` option
+- Separator divides action buttons from settings
+- Settings opens full-page Sheet that slides up from bottom
+
+**SettingsContent** (`src/components/SettingsContent.tsx`):
+- Reusable settings UI component
+- Used in the Settings Sheet for all screen sizes
+- Contains all game settings: color scheme, dark mode, gameplay options, game visibility toggles
+- Accepts all necessary state and handlers as props
 
 **UpdatePrompt** (`src/components/UpdatePrompt.tsx`):
 - Handles PWA update notifications when new versions are available
@@ -127,6 +149,28 @@ The app follows a single-page application pattern with the following key archite
 - Applies color scheme via `data-color-scheme` attribute on document element
 - Persists selection to localStorage
 
+### Context Providers
+
+**ColorSchemeContext** (`src/contexts/ColorSchemeContext.tsx`):
+- Manages custom color schemes for the Sudoku board
+- Provides `useColorScheme()` hook for accessing/updating color scheme
+- Persists selection to localStorage with key `sudoku-color-scheme`
+- Applies scheme via `data-color-scheme` attribute on document element
+
+**GameOptionsContext** (`src/contexts/GameOptionsContext.tsx`):
+- Manages visibility of game UI elements (timer, errors, share button)
+- Provides `useGameOptions()` hook with:
+  - `options`: Current visibility settings for all game UI elements
+  - `updateOption(key, value)`: Update individual option
+  - `resetOptions()`: Reset all options to defaults
+- Persists to localStorage with key `sudoku-game-options`
+- Default values: all options set to `true` (all UI elements visible)
+- Gracefully merges with defaults when loading partial options (backwards compatible)
+- Options available:
+  - `showTimer`: Control timer display in GameStats
+  - `showErrors`: Control error counter display in GameStats
+  - `showShareButton`: Control Share button visibility in hamburger menu
+
 ### State Management
 
 The app uses React hooks for local state management:
@@ -134,6 +178,7 @@ The app uses React hooks for local state management:
 - Timer and error tracking with localStorage persistence
 - Theme state via `next-themes` ThemeProvider
 - Color scheme state via custom ColorSchemeContext
+- Game UI options via custom GameOptionsContext
 - No global state management library (Redux, Zustand, etc.)
 
 ### PWA Configuration
@@ -205,5 +250,22 @@ The project uses **Vitest** and **React Testing Library** for testing.
 - Stats are included in shared URLs, allowing users to share progress with time and error count
 - Timer updates every second; stats saved to localStorage every 5 seconds
 - Error count increments only on invalid move attempts (violating Sudoku rules)
+- **Game Options**: Users can customize UI visibility in Settings (accessible via Settings icon in hamburger menu):
+  - Toggle visibility of Share button (in menu), Timer, and Errors (in stats display)
+  - New Game is always available in hamburger menu (cannot be hidden)
+  - All options default to visible for backwards compatibility
+  - Preferences persist to localStorage and are device-specific (not shared in URLs)
+  - Timer and error tracking continues internally even when hidden from UI
+- **Ultra-Compact Navigation**:
+  - **Single row layout**: Difficulty tabs, game stats, and hamburger menu all on one row
+  - Saves two rows of vertical space on mobile compared to original layout
+  - **Difficulty tabs**: "Medium" shortened to "Med" for space efficiency
+  - **Game stats**: Compact inline display (icons + numbers only, no background)
+  - **Hamburger menu (☰)**: Contains New Game, Reset Timer & Errors, Share (conditional), and Settings
+  - **Reset Timer**: Moved from Settings popup to hamburger menu for easier access
+  - Settings opens as full-page Sheet (slides up from bottom) on all devices
+  - Sheet has max-width constraint on desktop for better UX (centered, 512px max)
+  - New Game always available in menu for accessibility
+  - Share option conditionally shown based on `showShareButton` setting
 - PWA update detection has been enhanced with visibility-based checks and network reconnection handling
 - See `UpdatePrompt.improved.tsx` for the enhanced version with more aggressive update checking and detailed logging

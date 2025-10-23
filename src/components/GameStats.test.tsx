@@ -1,10 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
 import { GameStats } from './GameStats';
 
 describe('GameStats', () => {
-  it('should render timer and error count', () => {
+  it('should render timer and error count by default', () => {
     render(<GameStats elapsedTime={125} errorCount={3} isComplete={false} />);
 
     expect(screen.getByText('2:05')).toBeInTheDocument();
@@ -22,7 +21,7 @@ describe('GameStats', () => {
   });
 
   it('should highlight errors in red when count > 0', () => {
-    const { container } = render(
+    render(
       <GameStats elapsedTime={0} errorCount={5} isComplete={false} />
     );
 
@@ -31,65 +30,12 @@ describe('GameStats', () => {
   });
 
   it('should not highlight errors when count is 0', () => {
-    const { container } = render(
+    render(
       <GameStats elapsedTime={0} errorCount={0} isComplete={false} />
     );
 
     const errorText = screen.getByText('0');
     expect(errorText).not.toHaveClass('text-destructive');
-  });
-
-  it('should show restart button when onRestartTimer is provided', () => {
-    const mockRestart = vi.fn();
-    render(
-      <GameStats
-        elapsedTime={120}
-        errorCount={3}
-        isComplete={false}
-        onRestartTimer={mockRestart}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: /restart/i })).toBeInTheDocument();
-  });
-
-  it('should not show restart button when onRestartTimer is not provided', () => {
-    render(<GameStats elapsedTime={120} errorCount={3} isComplete={false} />);
-
-    expect(screen.queryByRole('button', { name: /restart/i })).not.toBeInTheDocument();
-  });
-
-  it('should not show restart button when game is complete', () => {
-    const mockRestart = vi.fn();
-    render(
-      <GameStats
-        elapsedTime={120}
-        errorCount={3}
-        isComplete={true}
-        onRestartTimer={mockRestart}
-      />
-    );
-
-    expect(screen.queryByRole('button', { name: /restart/i })).not.toBeInTheDocument();
-  });
-
-  it('should call onRestartTimer when restart button is clicked', async () => {
-    const user = userEvent.setup();
-    const mockRestart = vi.fn();
-
-    render(
-      <GameStats
-        elapsedTime={120}
-        errorCount={3}
-        isComplete={false}
-        onRestartTimer={mockRestart}
-      />
-    );
-
-    const restartButton = screen.getByRole('button', { name: /restart/i });
-    await user.click(restartButton);
-
-    expect(mockRestart).toHaveBeenCalledTimes(1);
   });
 
   it('should display timer with tabular-nums class', () => {
@@ -104,5 +50,90 @@ describe('GameStats', () => {
 
     const errorElement = screen.getByText('99');
     expect(errorElement).toHaveClass('tabular-nums');
+  });
+
+  describe('showTimer prop', () => {
+    it('should hide timer when showTimer is false', () => {
+      render(
+        <GameStats
+          elapsedTime={125}
+          errorCount={3}
+          isComplete={false}
+          showTimer={false}
+        />
+      );
+
+      expect(screen.queryByText('2:05')).not.toBeInTheDocument();
+      expect(screen.getByText('3')).toBeInTheDocument(); // errors still visible
+    });
+
+    it('should show timer when showTimer is true', () => {
+      render(
+        <GameStats
+          elapsedTime={125}
+          errorCount={3}
+          isComplete={false}
+          showTimer={true}
+        />
+      );
+
+      expect(screen.getByText('2:05')).toBeInTheDocument();
+    });
+  });
+
+  describe('showErrors prop', () => {
+    it('should hide errors when showErrors is false', () => {
+      render(
+        <GameStats
+          elapsedTime={125}
+          errorCount={3}
+          isComplete={false}
+          showErrors={false}
+        />
+      );
+
+      expect(screen.queryByText('3')).not.toBeInTheDocument();
+      expect(screen.getByText('2:05')).toBeInTheDocument(); // timer still visible
+    });
+
+    it('should show errors when showErrors is true', () => {
+      render(
+        <GameStats
+          elapsedTime={125}
+          errorCount={3}
+          isComplete={false}
+          showErrors={true}
+        />
+      );
+
+      expect(screen.getByText('3')).toBeInTheDocument();
+    });
+  });
+
+  describe('when both stats are hidden', () => {
+    it('should return null when both showTimer and showErrors are false', () => {
+      const { container } = render(
+        <GameStats
+          elapsedTime={125}
+          errorCount={3}
+          isComplete={false}
+          showTimer={false}
+          showErrors={false}
+        />
+      );
+
+      expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe('default prop values', () => {
+    it('should default to showing both timer and errors', () => {
+      render(
+        <GameStats elapsedTime={125} errorCount={3} isComplete={false} />
+      );
+
+      expect(screen.getByText('2:05')).toBeInTheDocument();
+      expect(screen.getByText('3')).toBeInTheDocument();
+    });
   });
 });

@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useGameOptions } from "@/contexts/GameOptionsContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +22,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import SudokuGrid from "./SudokuGrid";
 import NumberPad from "./NumberPad";
-import ColorSchemeSelector from "./ColorSchemeSelector";
 import InstallPrompt from "./InstallPrompt";
+import { MobileMenu } from "./MobileMenu";
+import { SettingsContent } from "./SettingsContent";
 import {
   Board,
   Difficulty,
@@ -52,7 +52,7 @@ import {
   generatePuzzleId,
 } from "@/utils/gameStats";
 import { GameStats } from "./GameStats";
-import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
+import { Sparkles, RotateCcw, Settings, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 const SudokuGame = () => {
@@ -63,6 +63,7 @@ const SudokuGame = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { options, updateOption } = useGameOptions();
 
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [board, setBoard] = useState<Board>([]);
@@ -82,6 +83,7 @@ const SudokuGame = () => {
     num: number;
   }> | null>(null);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
   const isInitialLoadRef = useRef(true);
 
   // Timer and error tracking
@@ -405,107 +407,38 @@ const SudokuGame = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-3 px-4">
           <Tabs
             value={difficulty}
             onValueChange={(v) => setDifficulty(v as Difficulty)}
           >
             <TabsList>
               <TabsTrigger value="easy">Easy</TabsTrigger>
-              <TabsTrigger value="medium">Medium</TabsTrigger>
+              <TabsTrigger value="medium">Med</TabsTrigger>
               <TabsTrigger value="hard">Hard</TabsTrigger>
             </TabsList>
           </Tabs>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={() => initializeGame(difficulty)}
-              variant="outline"
-              className="gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              New Game
-            </Button>
-
-            <Button onClick={handleShare} variant="outline" className="gap-2">
-              <Share2 className="w-4 h-4" />
-              Share
-            </Button>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-96">
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Settings</h3>
-
-                  <ColorSchemeSelector />
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Appearance</h4>
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor="dark-mode-toggle"
-                        className="cursor-pointer flex items-center gap-2"
-                      >
-                        {theme === "dark" ? (
-                          <Moon className="w-4 h-4" />
-                        ) : (
-                          <Sun className="w-4 h-4" />
-                        )}
-                        Dark Mode
-                      </Label>
-                      <Switch
-                        id="dark-mode-toggle"
-                        checked={theme === "dark"}
-                        onCheckedChange={(checked) =>
-                          setTheme(checked ? "dark" : "light")
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Gameplay</h4>
-                    <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor="highlight-toggle"
-                        className="cursor-pointer"
-                      >
-                        Row/Column Highlight
-                      </Label>
-                      <Switch
-                        id="highlight-toggle"
-                        checked={highlightEnabled}
-                        onCheckedChange={setHighlightEnabled}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Double-click a selected cell to quickly toggle
-                      highlighting
-                    </p>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 items-center justify-center w-full">
-          {/* Game Stats */}
           <GameStats
             elapsedTime={elapsedTime}
             errorCount={errorCount}
             isComplete={isComplete}
-            onRestartTimer={handleRestartTimer}
+            showTimer={options.showTimer}
+            showErrors={options.showErrors}
+            compact={true}
           />
+
+          <MobileMenu
+            onNewGame={() => initializeGame(difficulty)}
+            onShare={handleShare}
+            onOpenSettings={() => setShowMobileSettings(true)}
+            onRestartTimer={handleRestartTimer}
+            showShare={options.showShareButton}
+            isComplete={isComplete}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 items-center justify-center w-full">
 
           {/* Sudoku Grid - full width on mobile, constrained on desktop */}
           <SudokuGrid
@@ -558,6 +491,28 @@ const SudokuGame = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Settings Sheet */}
+        <Sheet open={showMobileSettings} onOpenChange={setShowMobileSettings}>
+          <SheetContent
+            side="bottom"
+            className="h-auto max-h-[85vh] overflow-y-auto sm:max-w-lg sm:mx-auto sm:rounded-t-lg"
+          >
+            <SheetHeader>
+              <SheetTitle>Settings</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <SettingsContent
+                theme={theme}
+                setTheme={setTheme}
+                highlightEnabled={highlightEnabled}
+                setHighlightEnabled={setHighlightEnabled}
+                options={options}
+                updateOption={updateOption}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
