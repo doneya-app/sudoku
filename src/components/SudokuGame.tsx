@@ -407,7 +407,7 @@ const SudokuGame = () => {
           </p>
         </div>
 
-        <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-3 px-4">
+        <div className="flex items-center justify-between w-full sm:max-w-xl mx-auto gap-3 px-4">
           <Tabs
             value={difficulty}
             onValueChange={(v) => setDifficulty(v as Difficulty)}
