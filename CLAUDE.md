@@ -15,17 +15,32 @@ npm install
 # Start development server (runs on http://localhost:8080)
 npm run dev
 
-# Build for production
+# Build for production (includes build verification)
 npm run build
+
+# Build for production without verification
+npm run build:prod
 
 # Build for development mode (includes component tagging)
 npm run build:dev
+
+# Verify production build (check for test files)
+npm run verify-build
 
 # Lint code
 npm run lint
 
 # Preview production build
 npm run preview
+
+# Run tests
+npm test
+
+# Run tests with UI
+npm test:ui
+
+# Run tests with coverage report
+npm test:coverage
 ```
 
 ## Architecture
@@ -67,6 +82,13 @@ The app follows a single-page application pattern with the following key archite
 
 **NumberPad** (`src/components/NumberPad.tsx`):
 - Number input interface (1-9 + clear button)
+
+**UpdatePrompt** (`src/components/UpdatePrompt.tsx`):
+- Handles PWA update notifications when new versions are available
+- Checks for updates every 30 minutes
+- Triggers update checks on page visibility change (tab return)
+- Triggers update checks on network reconnection
+- Shows toast notification with Update/Later options
 
 ### Core Utilities
 
@@ -121,9 +143,42 @@ Configured in `vite.config.ts`:
 - Dark mode support via `next-themes` (class-based)
 - Responsive design with mobile-first approach
 
+### Testing
+
+The project uses **Vitest** and **React Testing Library** for testing.
+
+**Test Infrastructure**:
+- `vitest.config.ts` - Vitest configuration with jsdom environment
+- `src/tests/setup.ts` - Global test setup (mocks for matchMedia, IntersectionObserver, etc.)
+- `src/tests/mocks/` - Module mocks (e.g., PWA virtual modules)
+
+**Test File Structure**:
+- Component tests: `src/components/ComponentName.test.tsx`
+- Utility tests: `src/utils/utilityName.test.ts`
+- Test files use the `.test.tsx` or `.test.ts` extension
+- Tests are co-located with their source files
+
+**Writing Tests**:
+- Use `describe` blocks to group related tests
+- Mock external dependencies (PWA modules, toast notifications, etc.)
+- Test user behavior and outcomes, not implementation details
+- Use `render` from `@testing-library/react` for component tests
+- Use `waitFor` for asynchronous assertions
+- Prefer semantic queries (`getByRole`, `getByLabelText`) over test IDs
+
+**Build Safety**:
+- Test files are never included in production builds (Vite tree-shaking)
+- `npm run build` automatically runs `verify-build` script
+- `verify-build` checks `dist/` for any test-related files
+- Build fails if test files are found in production bundle
+
+**Reference**: See `TESTING.md` for comprehensive testing documentation, best practices, and troubleshooting.
+
 ## Important Notes
 
 - All game state can be reconstructed from the URL, making the app stateless
 - The solution is generated client-side from the puzzle (puzzle is guaranteed solvable)
 - Initial board is immutable once generated; only user-filled cells can be modified
 - Color scheme changes apply custom properties to root element, working with both light/dark modes
+- PWA update detection has been enhanced with visibility-based checks and network reconnection handling
+- See `UpdatePrompt.improved.tsx` for the enhanced version with more aggressive update checking and detailed logging
