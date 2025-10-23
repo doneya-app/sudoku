@@ -41,7 +41,17 @@ import {
   decodeCurrentState,
   difficultyToChar,
   charToDifficulty,
+  encodeGameStats,
+  decodeGameStats,
 } from "@/utils/urlState";
+import {
+  formatTime,
+  saveGameStats,
+  loadGameStats,
+  clearGameStats,
+  generatePuzzleId,
+} from "@/utils/gameStats";
+import { GameStats } from "./GameStats";
 import { Sparkles, RotateCcw, Settings, Share2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
@@ -74,6 +84,12 @@ const SudokuGame = () => {
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const isInitialLoadRef = useRef(true);
 
+  // Timer and error tracking
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [errorCount, setErrorCount] = useState<number>(0);
+  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+
   const initializeGame = useCallback(
     (diff: Difficulty) => {
       console.log("Initializing new game with difficulty:", diff);
@@ -88,6 +104,18 @@ const SudokuGame = () => {
       setSelectedCell(null);
       setErrors(new Set());
       setIsComplete(false);
+
+      // Reset and start timer
+      const startTime = Date.now();
+      setGameStartTime(startTime);
+      setElapsedTime(0);
+      setErrorCount(0);
+      setIsTimerRunning(true);
+
+      // Save initial stats to localStorage
+      const puzzleId = generatePuzzleId(encoded);
+      clearGameStats(); // Clear old stats
+      saveGameStats(puzzleId, startTime, 0, 0);
     },
     [navigate],
   );
@@ -140,6 +168,38 @@ const SudokuGame = () => {
       // Always start from the base puzzle; ask before applying shared progress
       setBoard(puzzle.map((row) => [...row]));
 
+      // Load stats from URL and localStorage
+      const puzzleId = generatePuzzleId(puzzleEncoded);
+      const urlStats = decodeGameStats(searchParams);
+      const storedStats = loadGameStats(puzzleId);
+
+      // Prefer stored stats over URL stats if they're for the same puzzle
+      let loadedElapsedTime = 0;
+      let loadedErrorCount = 0;
+      let startTime = Date.now();
+
+      if (storedStats) {
+        // Resume from localStorage
+        loadedElapsedTime = storedStats.elapsedTime;
+        loadedErrorCount = storedStats.errorCount;
+        startTime = storedStats.startTime;
+        console.log("Loaded stats from localStorage:", storedStats);
+      } else if (urlStats.elapsedTime > 0 || urlStats.errorCount > 0) {
+        // Load from URL (shared game)
+        loadedElapsedTime = urlStats.elapsedTime;
+        loadedErrorCount = urlStats.errorCount;
+        startTime = Date.now() - (loadedElapsedTime * 1000);
+        console.log("Loaded stats from URL:", urlStats);
+      }
+
+      setElapsedTime(loadedElapsedTime);
+      setErrorCount(loadedErrorCount);
+      setGameStartTime(startTime);
+      setIsTimerRunning(true);
+
+      // Save to localStorage
+      saveGameStats(puzzleId, startTime, loadedElapsedTime, loadedErrorCount);
+
       // If a shared state is present, store it and prompt the user
       if (stateParam) {
         const moves = decodeCurrentState(stateParam);
@@ -176,6 +236,30 @@ const SudokuGame = () => {
       return () => clearTimeout(timer);
     }
   }, [isInitialized]);
+
+  // Timer effect - updates every second
+  useEffect(() => {
+    if (!isTimerRunning || !gameStartTime) return;
+
+    const interval = setInterval(() => {
+      const newElapsedTime = Math.floor((Date.now() - gameStartTime) / 1000);
+      setElapsedTime(newElapsedTime);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTimerRunning, gameStartTime]);
+
+  // Save stats to localStorage periodically (every 5 seconds)
+  useEffect(() => {
+    if (!isTimerRunning || !gameStartTime || initialBoard.length === 0) return;
+
+    const saveInterval = setInterval(() => {
+      const puzzleId = generatePuzzleId(encodeInitialPuzzle(initialBoard));
+      saveGameStats(puzzleId, gameStartTime, elapsedTime, errorCount);
+    }, 5000); // Save every 5 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [isTimerRunning, gameStartTime, initialBoard, elapsedTime, errorCount]);
 
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard[row][col] === null) {
@@ -216,6 +300,8 @@ const SudokuGame = () => {
     newBoard[row][col] = null; // Temporarily clear the cell
 
     if (!isValid(newBoard, row, col, num)) {
+      // Increment error counter
+      setErrorCount((prev) => prev + 1);
       toast.error(
         "Invalid move! Number already exists in row, column, or 3×3 box",
       );
@@ -228,14 +314,26 @@ const SudokuGame = () => {
 
     if (isBoardComplete(newBoard, solution)) {
       setIsComplete(true);
-      toast.success("🎉 Congratulations! You solved the puzzle!");
+      setIsTimerRunning(false); // Stop timer
+
+      // Save final stats
+      const puzzleId = generatePuzzleId(encodeInitialPuzzle(initialBoard));
+      saveGameStats(puzzleId, gameStartTime!, elapsedTime, errorCount);
+
+      toast.success(
+        `🎉 Congratulations! Time: ${formatTime(elapsedTime)}, Errors: ${errorCount}`
+      );
     }
   };
 
   const handleShare = () => {
-    const currentState = encodeCurrentState(initialBoard, board);
+    const movesState = encodeCurrentState(initialBoard, board);
+    const statsParams = encodeGameStats(elapsedTime, errorCount);
+
     const baseUrl = window.location.origin + window.location.pathname;
-    const shareUrl = currentState ? `${baseUrl}?s=${currentState}` : baseUrl;
+    const moveParam = movesState ? `s=${movesState}` : '';
+    const allParams = [moveParam, statsParams].filter(Boolean).join('&');
+    const shareUrl = allParams ? `${baseUrl}?${allParams}` : baseUrl;
 
     navigator.clipboard.writeText(shareUrl).then(
       () => {
@@ -245,6 +343,21 @@ const SudokuGame = () => {
         toast.error("Failed to copy URL");
       },
     );
+  };
+
+  const handleRestartTimer = () => {
+    const startTime = Date.now();
+    setGameStartTime(startTime);
+    setElapsedTime(0);
+    setErrorCount(0);
+
+    // Save reset stats to localStorage
+    if (initialBoard.length > 0) {
+      const puzzleId = generatePuzzleId(encodeInitialPuzzle(initialBoard));
+      saveGameStats(puzzleId, startTime, 0, 0);
+    }
+
+    toast.success("Timer and errors reset!");
   };
 
   const applyPendingMoves = useCallback(() => {
@@ -385,7 +498,15 @@ const SudokuGame = () => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:gap-6 items-center justify-center w-full">
+        <div className="flex flex-col gap-3 items-center justify-center w-full">
+          {/* Game Stats */}
+          <GameStats
+            elapsedTime={elapsedTime}
+            errorCount={errorCount}
+            isComplete={isComplete}
+            onRestartTimer={handleRestartTimer}
+          />
+
           {/* Sudoku Grid - full width on mobile, constrained on desktop */}
           <SudokuGrid
             board={board}

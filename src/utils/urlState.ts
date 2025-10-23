@@ -160,3 +160,27 @@ export function difficultyToChar(difficulty: Difficulty): string {
 export function charToDifficulty(char: string): Difficulty | null {
   return CHAR_TO_DIFFICULTY[char] || null;
 }
+
+// Encode game stats (time and errors) to URL params
+export function encodeGameStats(
+  elapsedTime: number,
+  errorCount: number
+): string {
+  const params = new URLSearchParams();
+  if (elapsedTime > 0) params.set('t', elapsedTime.toString());
+  if (errorCount > 0) params.set('e', errorCount.toString());
+  return params.toString();
+}
+
+// Decode game stats from URL search params
+export function decodeGameStats(
+  searchParams: URLSearchParams
+): { elapsedTime: number; errorCount: number } {
+  const time = parseInt(searchParams.get('t') || '0');
+  const errors = parseInt(searchParams.get('e') || '0');
+
+  return {
+    elapsedTime: isNaN(time) || time < 0 ? 0 : time,
+    errorCount: isNaN(errors) || errors < 0 ? 0 : errors,
+  };
+}

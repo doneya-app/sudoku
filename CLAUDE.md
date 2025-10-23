@@ -59,18 +59,22 @@ The app follows a single-page application pattern with the following key archite
 **Routing**:
 - `/` - Main game page
 - `/:gameState/*` - Game with encoded puzzle state in URL
-- URL format: `/{difficulty}/{puzzle}?s={currentState}`
+- URL format: `/{difficulty}/{puzzle}?s={moves}&t={time}&e={errors}`
   - `difficulty`: Single character (e/m/h)
   - `puzzle`: 81-character string representing the initial puzzle (0 = empty, 1-9 = filled)
   - `?s=` query param: Base62-encoded user moves (optional, used for sharing progress)
+  - `?t=` query param: Elapsed time in seconds (optional, included in shared URLs)
+  - `?e=` query param: Error count (optional, included in shared URLs)
 
 ### Key Components
 
 **SudokuGame** (`src/components/SudokuGame.tsx`):
 - Main game controller component containing all game logic
 - Manages state: difficulty, board, initialBoard, solution, selectedCell, errors, completion
-- Handles URL encoding/decoding for puzzle sharing
-- Coordinates child components: SudokuGrid, NumberPad, ColorSchemeSelector, InstallPrompt
+- Tracks game statistics: timer (elapsed time) and error count
+- Persists stats to localStorage for continuity across page refreshes
+- Handles URL encoding/decoding for puzzle and stats sharing
+- Coordinates child components: SudokuGrid, NumberPad, GameStats, ColorSchemeSelector, InstallPrompt
 
 **SudokuGrid** (`src/components/SudokuGrid.tsx`):
 - Renders the 9x9 Sudoku grid
@@ -82,6 +86,12 @@ The app follows a single-page application pattern with the following key archite
 
 **NumberPad** (`src/components/NumberPad.tsx`):
 - Number input interface (1-9 + clear button)
+
+**GameStats** (`src/components/GameStats.tsx`):
+- Displays game timer and error count
+- Updates every second during gameplay
+- Visual indicators: clock icon for time, alert icon for errors
+- Errors highlighted in red when count > 0
 
 **UpdatePrompt** (`src/components/UpdatePrompt.tsx`):
 - Handles PWA update notifications when new versions are available
@@ -102,7 +112,15 @@ The app follows a single-page application pattern with the following key archite
 - Encodes/decodes puzzle state to/from URL
 - Initial puzzle: 81-character string (0-9)
 - Current state: Base62-encoded position+number pairs for user moves
+- Game stats: `?t={time}&e={errors}` query params for sharing progress
 - Difficulty: Single character mapping (e/m/h)
+
+**gameStats.ts** (`src/utils/gameStats.ts`):
+- Formats elapsed time (seconds) to MM:SS or HH:MM:SS display format
+- Manages localStorage persistence for game statistics
+- Saves/loads timer start time, elapsed time, and error count
+- Generates unique puzzle IDs for stat tracking
+- Gracefully handles localStorage errors
 
 **colorSchemes.ts** (`src/utils/colorSchemes.ts`):
 - Defines available color schemes (classic, forest, sunset, purple)
@@ -113,6 +131,7 @@ The app follows a single-page application pattern with the following key archite
 
 The app uses React hooks for local state management:
 - Game state is managed in `SudokuGame` component
+- Timer and error tracking with localStorage persistence
 - Theme state via `next-themes` ThemeProvider
 - Color scheme state via custom ColorSchemeContext
 - No global state management library (Redux, Zustand, etc.)
@@ -128,12 +147,14 @@ Configured in `vite.config.ts`:
 ### Game Flow
 
 1. **Initialization**: On mount, component reads URL parameters to determine if loading existing puzzle or generating new one
-2. **URL Parsing**: Decodes difficulty + puzzle from URL path, and optional progress from query param
-3. **Shared Progress**: If progress detected in URL, prompts user to load or dismiss it
-4. **Input Handling**: Keyboard (1-9, Backspace/Delete) or NumberPad for cell input
-5. **Validation**: Numbers validated before insertion; invalid moves show toast error
-6. **Completion**: Board automatically detected as complete when matching solution
-7. **Sharing**: Share button copies URL with current progress to clipboard
+2. **URL Parsing**: Decodes difficulty + puzzle from URL path, and optional progress + stats from query params
+3. **Timer Start**: Timer starts automatically when game loads, persists to localStorage every 5 seconds
+4. **Shared Progress**: If progress detected in URL, prompts user to load or dismiss it
+5. **Input Handling**: Keyboard (1-9, Backspace/Delete) or NumberPad for cell input
+6. **Validation**: Numbers validated before insertion; invalid moves increment error counter and show toast
+7. **Completion**: Board automatically detected as complete when matching solution; timer stops and final stats shown
+8. **Sharing**: Share button copies URL with current progress and stats (time, errors) to clipboard
+9. **Persistence**: Stats survive page refresh via localStorage (keyed by puzzle ID)
 
 ### Styling
 
@@ -180,5 +201,9 @@ The project uses **Vitest** and **React Testing Library** for testing.
 - The solution is generated client-side from the puzzle (puzzle is guaranteed solvable)
 - Initial board is immutable once generated; only user-filled cells can be modified
 - Color scheme changes apply custom properties to root element, working with both light/dark modes
+- **Game statistics** (timer and error count) are tracked automatically and persist across page refreshes via localStorage
+- Stats are included in shared URLs, allowing users to share progress with time and error count
+- Timer updates every second; stats saved to localStorage every 5 seconds
+- Error count increments only on invalid move attempts (violating Sudoku rules)
 - PWA update detection has been enhanced with visibility-based checks and network reconnection handling
 - See `UpdatePrompt.improved.tsx` for the enhanced version with more aggressive update checking and detailed logging
