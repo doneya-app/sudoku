@@ -76,6 +76,7 @@ const SudokuGame = () => {
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const [isComplete, setIsComplete] = useState(false);
   const [highlightEnabled, setHighlightEnabled] = useState(true);
+  const [highlightedNumber, setHighlightedNumber] = useState<number | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [pendingMoves, setPendingMoves] = useState<Array<{
     row: number;
@@ -104,6 +105,7 @@ const SudokuGame = () => {
       setInitialBoard(puzzle.map((row) => [...row]));
       setSolution(sol);
       setSelectedCell(null);
+      setHighlightedNumber(null);
       setErrors(new Set());
       setIsComplete(false);
 
@@ -212,6 +214,7 @@ const SudokuGame = () => {
       }
 
       setSelectedCell(null);
+      setHighlightedNumber(null);
       setErrors(new Set());
       setIsComplete(false);
     } else {
@@ -266,6 +269,15 @@ const SudokuGame = () => {
   const handleCellClick = (row: number, col: number) => {
     if (initialBoard[row][col] === null) {
       setSelectedCell({ row, col });
+      // Clear highlighted number when selecting an empty cell
+      setHighlightedNumber(null);
+    } else {
+      // If clicking on a filled cell, highlight all instances of that number
+      const cellValue = board[row][col];
+      if (options.highlightSameNumbers && cellValue !== null) {
+        // Toggle: if clicking the same number again, clear the highlight
+        setHighlightedNumber(highlightedNumber === cellValue ? null : cellValue);
+      }
     }
   };
 
@@ -450,6 +462,8 @@ const SudokuGame = () => {
             onCellDoubleClick={handleCellDoubleClick}
             errors={errors}
             highlightEnabled={highlightEnabled}
+            highlightedNumber={highlightedNumber}
+            highlightSameNumbersEnabled={options.highlightSameNumbers}
           />
 
           {/* NumberPad - grid layout on mobile, flex wrap on desktop */}

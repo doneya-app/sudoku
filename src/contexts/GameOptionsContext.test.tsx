@@ -25,6 +25,7 @@ describe("GameOptionsContext", () => {
         showTimer: true,
         showErrors: true,
         showShareButton: true,
+        highlightSameNumbers: true,
       });
     });
 
@@ -33,6 +34,7 @@ describe("GameOptionsContext", () => {
         showTimer: false,
         showErrors: true,
         showShareButton: false,
+        highlightSameNumbers: false,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedOptions));
 
@@ -59,6 +61,7 @@ describe("GameOptionsContext", () => {
         showTimer: false,
         showErrors: true, // default
         showShareButton: true, // default
+        highlightSameNumbers: true, // default
       });
     });
 
@@ -74,6 +77,7 @@ describe("GameOptionsContext", () => {
         showTimer: true,
         showErrors: true,
         showShareButton: true,
+        highlightSameNumbers: true,
       });
     });
   });
@@ -124,6 +128,7 @@ describe("GameOptionsContext", () => {
         showTimer: false,
         showErrors: false,
         showShareButton: false,
+        highlightSameNumbers: true, // unchanged
       });
     });
   });
@@ -149,6 +154,7 @@ describe("GameOptionsContext", () => {
         showTimer: true,
         showErrors: true,
         showShareButton: true,
+        highlightSameNumbers: true,
       });
     });
 
@@ -173,6 +179,7 @@ describe("GameOptionsContext", () => {
           showTimer: true,
           showErrors: true,
           showShareButton: true,
+          highlightSameNumbers: true,
         });
       });
     });
