@@ -75,6 +75,24 @@ export function SettingsContent({
           Double-click a selected cell to quickly toggle
           highlighting
         </p>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor="highlight-same-numbers-toggle"
+            className="cursor-pointer"
+          >
+            Highlight Same Numbers
+          </Label>
+          <Switch
+            id="highlight-same-numbers-toggle"
+            checked={options.highlightSameNumbers}
+            onCheckedChange={(checked) =>
+              updateOption("highlightSameNumbers", checked)
+            }
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Click on a number to highlight all instances of that number
+        </p>
       </div>
 
       <Separator />

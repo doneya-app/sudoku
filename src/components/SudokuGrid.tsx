@@ -11,6 +11,8 @@ interface SudokuGridProps {
   onCellDoubleClick: (row: number, col: number) => void;
   errors: Set<string>;
   highlightEnabled: boolean;
+  highlightedNumber: number | null;
+  highlightSameNumbersEnabled: boolean;
 }
 
 const SudokuGrid = ({
@@ -22,6 +24,8 @@ const SudokuGrid = ({
   onCellDoubleClick,
   errors,
   highlightEnabled,
+  highlightedNumber,
+  highlightSameNumbersEnabled,
 }: SudokuGridProps) => {
   return (
     <div className="inline-block bg-card rounded-lg shadow-xl p-2 sm:p-3 md:p-4 animate-scale-in w-full sm:max-w-xl">
@@ -36,6 +40,10 @@ const SudokuGrid = ({
               selectedCell !== null &&
               (selectedCell.row === rowIndex || selectedCell.col === colIndex) &&
               !isSelected;
+            const isSameNumberHighlighted =
+              highlightSameNumbersEnabled &&
+              highlightedNumber !== null &&
+              cell === highlightedNumber;
             const cellKey = `${rowIndex}-${colIndex}`;
             const isError = errors.has(cellKey);
             const isRightBorder = (colIndex + 1) % 3 === 0 && colIndex !== 8;
@@ -54,6 +62,7 @@ const SudokuGrid = ({
                   isFixed={isFixed}
                   isSelected={isSelected}
                   isHighlighted={isHighlighted}
+                  isSameNumberHighlighted={isSameNumberHighlighted}
                   isError={isError}
                   onClick={() => onCellClick(rowIndex, colIndex)}
                   onDoubleClick={() => onCellDoubleClick(rowIndex, colIndex)}

@@ -4,6 +4,7 @@ export interface GameOptions {
   showTimer: boolean;
   showErrors: boolean;
   showShareButton: boolean;
+  highlightSameNumbers: boolean;
 }
 
 interface GameOptionsContextType {
@@ -16,6 +17,7 @@ const defaultOptions: GameOptions = {
   showTimer: true,
   showErrors: true,
   showShareButton: true,
+  highlightSameNumbers: true,
 };
 
 const STORAGE_KEY = 'sudoku-game-options';
