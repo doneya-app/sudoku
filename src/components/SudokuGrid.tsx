@@ -9,6 +9,7 @@ interface SudokuGridProps {
   selectedCell: { row: number; col: number } | null;
   onCellClick: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
+  onCellNumberSelect?: (row: number, col: number, num: number | null) => void;
   errors: Set<string>;
   highlightEnabled: boolean;
   highlightedNumber: number | null;
@@ -22,6 +23,7 @@ const SudokuGrid = ({
   selectedCell,
   onCellClick,
   onCellDoubleClick,
+  onCellNumberSelect,
   errors,
   highlightEnabled,
   highlightedNumber,
@@ -66,6 +68,7 @@ const SudokuGrid = ({
                   isError={isError}
                   onClick={() => onCellClick(rowIndex, colIndex)}
                   onDoubleClick={() => onCellDoubleClick(rowIndex, colIndex)}
+                  onNumberSelect={onCellNumberSelect ? (num) => onCellNumberSelect(rowIndex, colIndex, num) : undefined}
                 />
               </div>
             );

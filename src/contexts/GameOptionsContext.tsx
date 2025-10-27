@@ -5,6 +5,7 @@ export interface GameOptions {
   showErrors: boolean;
   showShareButton: boolean;
   highlightSameNumbers: boolean;
+  showCellNumberSelector: boolean;
 }
 
 interface GameOptionsContextType {
@@ -18,6 +19,7 @@ const defaultOptions: GameOptions = {
   showErrors: true,
   showShareButton: true,
   highlightSameNumbers: true,
+  showCellNumberSelector: true,
 };
 
 const STORAGE_KEY = 'sudoku-game-options';

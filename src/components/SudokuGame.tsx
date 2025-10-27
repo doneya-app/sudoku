@@ -340,6 +340,52 @@ const SudokuGame = () => {
     }
   };
 
+  const handleCellNumberSelect = (row: number, col: number, num: number | null) => {
+    // Ensure cell is editable
+    if (initialBoard[row][col] !== null) return;
+
+    // Set the selected cell so it's highlighted
+    setSelectedCell({ row, col });
+
+    // If clearing the cell (num is null), allow it
+    if (num === null) {
+      const newBoard = board.map((r) => [...r]);
+      newBoard[row][col] = null;
+      setBoard(newBoard);
+      return;
+    }
+
+    // Check if the number would be valid before inserting
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = null; // Temporarily clear the cell
+
+    if (!isValid(newBoard, row, col, num)) {
+      // Increment error counter
+      setErrorCount((prev) => prev + 1);
+      toast.error(
+        "Invalid move! Number already exists in row, column, or 3×3 box",
+      );
+      return;
+    }
+
+    // Number is valid, insert it
+    newBoard[row][col] = num;
+    setBoard(newBoard);
+
+    if (isBoardComplete(newBoard, solution)) {
+      setIsComplete(true);
+      setIsTimerRunning(false); // Stop timer
+
+      // Save final stats
+      const puzzleId = generatePuzzleId(encodeInitialPuzzle(initialBoard));
+      saveGameStats(puzzleId, gameStartTime!, elapsedTime, errorCount);
+
+      toast.success(
+        `🎉 Congratulations! Time: ${formatTime(elapsedTime)}, Errors: ${errorCount}`
+      );
+    }
+  };
+
   const handleShare = () => {
     const movesState = encodeCurrentState(initialBoard, board);
     const statsParams = encodeGameStats(elapsedTime, errorCount);
@@ -460,6 +506,7 @@ const SudokuGame = () => {
             selectedCell={selectedCell}
             onCellClick={handleCellClick}
             onCellDoubleClick={handleCellDoubleClick}
+            onCellNumberSelect={options.showCellNumberSelector ? handleCellNumberSelect : undefined}
             errors={errors}
             highlightEnabled={highlightEnabled}
             highlightedNumber={highlightedNumber}

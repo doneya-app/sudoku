@@ -93,6 +93,24 @@ export function SettingsContent({
         <p className="text-xs text-muted-foreground">
           Click on a number to highlight all instances of that number
         </p>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor="cell-number-selector-toggle"
+            className="cursor-pointer"
+          >
+            In-Cell Number Selector
+          </Label>
+          <Switch
+            id="cell-number-selector-toggle"
+            checked={options.showCellNumberSelector}
+            onCheckedChange={(checked) =>
+              updateOption("showCellNumberSelector", checked)
+            }
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Show number picker when clicking cells (you can still use keyboard or number pad)
+        </p>
       </div>
 
       <Separator />
