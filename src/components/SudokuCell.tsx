@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import CellNumberSelector from "./CellNumberSelector";
 
 interface SudokuCellProps {
   value: number | null;
@@ -9,10 +10,21 @@ interface SudokuCellProps {
   isError: boolean;
   onClick: () => void;
   onDoubleClick: () => void;
+  onNumberSelect?: (num: number | null) => void;
 }
 
-const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isSameNumberHighlighted, isError, onClick, onDoubleClick }: SudokuCellProps) => {
-  return (
+const SudokuCell = ({
+  value,
+  isFixed,
+  isSelected,
+  isHighlighted,
+  isSameNumberHighlighted,
+  isError,
+  onClick,
+  onDoubleClick,
+  onNumberSelect
+}: SudokuCellProps) => {
+  const cellButton = (
     <button
       onClick={onClick}
       onDoubleClick={onDoubleClick}
@@ -31,6 +43,20 @@ const SudokuCell = ({ value, isFixed, isSelected, isHighlighted, isSameNumberHig
       {value || "0"}
     </button>
   );
+
+  // Only wrap with number selector if onNumberSelect is provided
+  if (onNumberSelect) {
+    return (
+      <CellNumberSelector
+        onNumberSelect={onNumberSelect}
+        isFixed={isFixed}
+      >
+        {cellButton}
+      </CellNumberSelector>
+    );
+  }
+
+  return cellButton;
 };
 
 export default SudokuCell;
