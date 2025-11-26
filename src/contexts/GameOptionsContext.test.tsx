@@ -26,6 +26,7 @@ describe("GameOptionsContext", () => {
         showErrors: true,
         showShareButton: true,
         highlightSameNumbers: true,
+        showCellNumberSelector: true,
       });
     });
 
@@ -35,6 +36,7 @@ describe("GameOptionsContext", () => {
         showErrors: true,
         showShareButton: false,
         highlightSameNumbers: false,
+        showCellNumberSelector: true,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedOptions));
 
@@ -62,6 +64,7 @@ describe("GameOptionsContext", () => {
         showErrors: true, // default
         showShareButton: true, // default
         highlightSameNumbers: true, // default
+        showCellNumberSelector: true, // default
       });
     });
 
@@ -78,6 +81,7 @@ describe("GameOptionsContext", () => {
         showErrors: true,
         showShareButton: true,
         highlightSameNumbers: true,
+        showCellNumberSelector: true,
       });
     });
   });
@@ -129,6 +133,7 @@ describe("GameOptionsContext", () => {
         showErrors: false,
         showShareButton: false,
         highlightSameNumbers: true, // unchanged
+        showCellNumberSelector: true, // unchanged
       });
     });
   });
@@ -155,6 +160,7 @@ describe("GameOptionsContext", () => {
         showErrors: true,
         showShareButton: true,
         highlightSameNumbers: true,
+        showCellNumberSelector: true,
       });
     });
 
@@ -180,6 +186,7 @@ describe("GameOptionsContext", () => {
           showErrors: true,
           showShareButton: true,
           highlightSameNumbers: true,
+          showCellNumberSelector: true,
         });
       });
     });
