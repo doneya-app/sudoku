@@ -1,73 +1,122 @@
-# Welcome to your Lovable project
+# Sudoku PWA
 
-## Project info
+A Progressive Web App (PWA) Sudoku puzzle game with URL-based game state sharing, allowing users to share puzzles and progress via URLs.
 
-**URL**: https://lovable.dev/projects/64a52d07-6b19-421a-903e-e37323a66200
+## Features
 
-## How can I edit this code?
+- Three difficulty levels (Easy, Medium, Hard)
+- URL-based puzzle sharing with progress tracking
+- Dark mode support
+- Multiple color schemes
+- Timer and error tracking
+- Customizable UI visibility options
+- Works offline (PWA)
+- Mobile-friendly responsive design
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/64a52d07-6b19-421a-903e-e37323a66200) and start prompting.
+- Node.js & npm - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd sudoku
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The development server runs on http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Development Commands
 
-**Use GitHub Codespaces**
+```bash
+# Start development server
+npm run dev
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Build for production (includes build verification)
+npm run build
 
-## What technologies are used for this project?
+# Build for production without verification
+npm run build:prod
+
+# Build for development mode (includes component tagging)
+npm run build:dev
+
+# Verify production build (check for test files)
+npm run verify-build
+
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
+
+# Run tests
+npm test
+
+# Run tests with UI
+npm test:ui
+
+# Run tests with coverage report
+npm test:coverage
+```
+
+## Technologies
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Build tool and development server
+- **TypeScript** - Type-safe JavaScript
+- **React** - UI framework
+- **shadcn-ui** - Component library (Radix UI primitives)
+- **Tailwind CSS** - Utility-first styling
+- **Vitest** - Testing framework
+- **React Testing Library** - Component testing utilities
 
-## How can I deploy this project?
+## How It Works
 
-Simply open [Lovable](https://lovable.dev/projects/64a52d07-6b19-421a-903e-e37323a66200) and click on Share -> Publish.
+### URL-Based Game State
 
-## Can I connect a custom domain to my Lovable project?
+All game state is encoded in the URL, making the app completely stateless:
 
-Yes, you can!
+- URL format: `/{difficulty}/{puzzle}?s={moves}&t={time}&e={errors}`
+- `difficulty`: Single character (e/m/h)
+- `puzzle`: 81-character string representing the initial puzzle
+- `?s=` query param: Base62-encoded user moves (for sharing progress)
+- `?t=` query param: Elapsed time in seconds
+- `?e=` query param: Error count
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Game Statistics
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Timer and error count are tracked automatically
+- Stats persist across page refreshes via localStorage
+- Stats are included in shared URLs for progress tracking
+
+## Deployment
+
+This project can be deployed to any static hosting service:
+
+- **Vercel**: `vercel deploy`
+- **Netlify**: Connect your repository or use `netlify deploy`
+- **GitHub Pages**: Build and push `dist/` folder
+- **Any static host**: Build with `npm run build` and deploy the `dist/` folder
+
+## Documentation
+
+See `CLAUDE.md` for detailed architecture and development documentation.
+
+See `TESTING.md` for comprehensive testing documentation and best practices.
+
+## License
+
+[Your license here]
