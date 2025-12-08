@@ -26,7 +26,7 @@ jobs:
         run: npm run build
         env:
           # Set base path for Azure Blob Storage static website (root path)
-          VITE_BASE_PATH: /public
+          VITE_BASE_PATH: /
 
       - name: Deploy
         uses: bacongobbler/azure-blob-storage-upload@v3.0.0
